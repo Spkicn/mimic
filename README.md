@@ -96,8 +96,11 @@ skills/mimic/
     mimic-readme.md             # mode: artifact -> file on disk
     mimic-conventions.md        # mode: conventions -> layout, CI, AGENTS.md
   scripts/mimic-probe.mjs       # dependency-free GitHub fetcher with caching
-scripts/validate.mjs            # repository self-check: frontmatter, line budget, routing, links
+AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it
+CONTRIBUTING.md                 # how to contribute, and what makes a useful report
+scripts/validate.mjs            # self-check: frontmatter, single-line description, 25-150 band, routing, links
 .github/workflows/ci.yml        # runs the self-check on every push and PR
+.github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code plugin manifest
 install.ps1 / install.sh        # DSH / Claude / project-local installers
 .gitattributes                  # keeps install.sh LF and install.ps1 CRLF
@@ -130,13 +133,15 @@ No prose or code was copied. Differences from all of the above: they stop at a r
 
 ## Contributing
 
-Issues and PRs welcome. The most useful contribution is a **failure report**: a case where
-the agent asserted something about a repository it had not fetched, or adopted a convention
-that did not fit. Those become hard lines in the references.
+Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The most useful
+contribution is a **failure report**: a case where the agent asserted something about a
+repository it had not fetched, or adopted a convention that did not fit. Those become hard
+lines in the references.
 
 Run `node scripts/validate.mjs` before opening a PR — CI runs the same check. Keep
-`SKILL.md` under 150 lines and put detail in `reference/`; that is this repo's own
-convention, and the validator enforces it.
+`SKILL.md` between 25 and 150 lines and put detail in `reference/`; that is this repo's own
+convention, and the validator enforces both ends of it. Agent-facing rules live in
+[AGENTS.md](AGENTS.md).
 
 ## Licence
 

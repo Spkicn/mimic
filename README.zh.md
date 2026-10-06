@@ -92,8 +92,11 @@ skills/mimic/
     mimic-readme.md             # 模式：artifact -> 落盘文件
     mimic-conventions.md        # 模式：conventions -> 结构、CI、AGENTS.md
   scripts/mimic-probe.mjs       # 零依赖、带缓存的 GitHub 抓取器
-scripts/validate.mjs            # 仓库自检：frontmatter、行数预算、路由、链接
+AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它
+CONTRIBUTING.md                 # 怎么贡献，以及什么样的报告有用
+scripts/validate.mjs            # 自检：frontmatter、description 单行、25–150 行区间、路由、链接
 .github/workflows/ci.yml        # 每次 push / PR 跑一遍自检
+.github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code 插件清单
 install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
 .gitattributes                  # 让 install.sh 保持 LF、install.ps1 保持 CRLF
@@ -126,11 +129,12 @@ install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
 
 ## 贡献
 
-欢迎 issue 和 PR。最有价值的贡献是**失败报告**：agent 断言了它没有抓取过的仓库信息，或者采纳了
-一条不适合本项目的约定。这些会变成 reference 里的硬性红线。
+欢迎 issue 和 PR，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。最有价值的贡献是**失败报告**：agent
+断言了它没有抓取过的仓库信息，或者采纳了一条不适合本项目的约定。这些会变成 reference 里的硬性红线。
 
-提交 PR 前请先跑 `node scripts/validate.mjs`——CI 跑的是同一个检查。请保持 `SKILL.md` 在
-150 行以内，细节放进 `reference/`；这是本仓库自己的约定，校验脚本会强制执行。
+提交 PR 前请先跑 `node scripts/validate.mjs`——CI 跑的是同一个检查。请保持 `SKILL.md` 在 25–150
+行之间，细节放进 `reference/`；这是本仓库自己的约定，校验脚本两端都会强制执行。面向 agent 的规则写在
+[AGENTS.md](AGENTS.md)。
 
 ## License
 

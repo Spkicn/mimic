@@ -5,7 +5,8 @@
  * Enforces this repository's own conventions:
  *   - every skills * /SKILL.md has valid frontmatter (name, description, no legacy keys)
  *   - the skill directory name matches the frontmatter name
- *   - SKILL.md stays within the 150-line budget (detail belongs in reference/)
+ *   - `description` is a single-line scalar of usable length
+ *   - SKILL.md stays within the 25-150 line band (detail belongs in reference/)
  *   - every relative markdown link resolves
  *   - every reference file is routed to from SKILL.md, and every route exists
  *   - the plugin manifest parses and its skill paths resolve
@@ -19,6 +20,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LEGACY_KEYS = ["userInvocable", "modelInvocable", "disableModelInvocation"];
+const SKILL_LINE_FLOOR = 25;
 const SKILL_LINE_BUDGET = 150;
 const SKIP_DIRS = new Set([".git", ".mimic-cache", "node_modules"]);
 
@@ -48,6 +50,7 @@ for (const file of skillFiles) {
   if (!match) { fail(`${rel}: missing YAML frontmatter`); continue; }
 
   const frontmatter = match[1];
+  const frontmatterLines = frontmatter.split(/\r?\n/);
   const name = frontmatter.match(/^name:\s*(.+)$/m)?.[1]?.trim();
   const description = frontmatter.match(/^description:\s*(.+)$/m)?.[1]?.trim();
 
@@ -56,9 +59,25 @@ for (const file of skillFiles) {
   else if (dirname(rel).split("/").pop() !== name) fail(`${rel}: directory does not match name "${name}"`);
   else ok(`${rel}: name=${name}`);
 
-  if (!description) fail(`${rel}: frontmatter requires description`);
-  else if (description.length < 60) fail(`${rel}: description too short (${description.length} chars) to route reliably`);
-  else ok(`${rel}: description ${description.length} chars`);
+  // A block scalar or a wrapped plain scalar is the quietest way a skill stops
+  // registering on some hosts. Keep `description` to one line and check it here,
+  // because a rule no tool enforces decays.
+  const descriptionIndex = frontmatterLines.findIndex((line) => /^description\s*:/.test(line));
+  if (descriptionIndex === -1) {
+    fail(`${rel}: frontmatter requires description`);
+  } else {
+    const value = frontmatterLines[descriptionIndex].replace(/^description\s*:\s*/, "").trim();
+    const nextLine = frontmatterLines[descriptionIndex + 1] ?? "";
+    if (/^[|>]/.test(value) || value.length === 0) {
+      fail(`${rel}: description is empty or a block scalar ("${value}"); use a single-line scalar`);
+    } else if (/^\s+\S/.test(nextLine)) {
+      fail(`${rel}: description wraps onto a second line; keep it on one line for cross-host portability`);
+    } else if (description.length < 60) {
+      fail(`${rel}: description too short (${description.length} chars) to route reliably`);
+    } else {
+      ok(`${rel}: description ${description.length} chars, single line`);
+    }
+  }
 
   for (const legacy of LEGACY_KEYS) {
     if (new RegExp(`^${legacy}\\s*:`, "m").test(frontmatter)) {
@@ -68,7 +87,8 @@ for (const file of skillFiles) {
 
   const lines = raw.split("\n").length;
   if (lines > SKILL_LINE_BUDGET) fail(`${rel}: ${lines} lines exceeds the ${SKILL_LINE_BUDGET}-line budget; move detail to reference/`);
-  else ok(`${rel}: ${lines} lines`);
+  else if (lines < SKILL_LINE_FLOOR) fail(`${rel}: ${lines} lines is below the ${SKILL_LINE_FLOOR}-line floor; a body this thin routes but does not instruct`);
+  else ok(`${rel}: ${lines} lines (floor ${SKILL_LINE_FLOOR}, budget ${SKILL_LINE_BUDGET})`);
 
   // Routing coherence: SKILL.md and its sibling reference/ must agree.
   const referenceDir = join(dirname(file), "reference");
