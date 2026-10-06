@@ -1,5 +1,45 @@
 # Evidence: what you may claim, and how to spend the budget
 
+## The substance gate — check this one first
+
+Everything else in this file is about being honest. This section is about being *useful*.
+
+A run can pass every process check and still produce nothing. The failure sounds like this:
+
+> 落盘的决策记录：背景、选项、决定、后果
+> 按章节契约重写
+> 它让产出更规范
+
+Every sentence is grammatical, on topic, and true of any project in the category. That is the
+definition of a hole: **a sentence that would survive unchanged in someone else's artifact
+carries no information about this one.** Process compliance is not substance — a complete,
+honest, licence-checked research pass can still end in a template.
+
+### The test
+
+1. **Delete every proper noun, number, path and date.** If the artifact still reads complete,
+   it was a template. If it collapses, those were the content.
+2. **Require at least three specific claims** — a number, a name, a file path, a version, a
+   date, or a quoted line — each traceable to a fetch. Three is the floor, not a target.
+3. **Every generalisation carries its evidence inline.** "Comparable projects keep a section
+   inventory" is a hole. "6 of 6 have `.claude-plugin/`; 4 of 6 have `AGENTS.md` — read from
+   each root tree" is a finding.
+4. **Name the thing that surprised you.** If the run changed nothing about what the author
+   already believed, either the comparables were poorly chosen or the reading was shallow.
+   Say which; both are findings.
+
+### Worked failure
+
+A promotional video for this skill was rebuilt twice on motion-design principles — camera
+layer, transition overlap, layout budget — and passed every item of the completion gate while
+staying empty: a dark gradient, centred sentences, and a list of filenames. No repository, no
+code, no output, no number ever appeared on screen.
+
+The gate it passed had nine items, all of them about *how* the work was done. None asked
+whether the result said anything. The fix was not more motion; it was showing one real run —
+the two candidates rejected with their versions quoted, the three files read, the number that
+changed the cut.
+
 ## Two columns, always
 
 Every finding goes in one of two columns, and the column is visible in the output.

@@ -69,6 +69,14 @@ finish the first one before starting the second. Do not blend them into one pass
 
 Do not report success until every line holds. Report the gate itself as part of your answer.
 
+The first item decides whether the work was worth doing. Everything after it is about doing
+it honestly.
+
+- [ ] **Substance.** At least three claims in the artifact are specific and checkable — a
+      number, a name, a path, a version, a date, or a quoted line, each traceable to a fetch.
+      Test: delete every proper noun and number; if the artifact still reads complete, it is a
+      template. A run can pass every other item here and still produce nothing; see
+      [evidence.md](reference/evidence.md).
 - [ ] 3–5 comparable projects, each with a stated reason for inclusion.
 - [ ] At least one rejected candidate, with the reason for rejection.
 - [ ] Every repository claim traceable to a file or API response read in this session.
@@ -102,6 +110,7 @@ Do not report success until every line holds. Report the gate itself as part of 
 
 | Anti-pattern | What it looks like | Do instead |
 |---|---|---|
+| **A template with a clean conscience** | Every process item passed; the output names nothing, numbers nothing, shows nothing | The substance gate at the top of [evidence.md](reference/evidence.md) |
 | Popularity theatre | "Top 5 by stars" | Filter by comparability, then report maintenance and license |
 | README-only archaeology | Claiming to know the architecture from the README | Open the tree, the manifest, and the entry point |
 | Consensus by assertion | "Most projects use X" | Name which projects, and cite the file that shows it |
