@@ -1,6 +1,6 @@
 ---
 name: mimic
-description: Use when a project artifact should follow the conventions proven by excellent open-source projects rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "benchmark against comparable repos", "what stack do similar projects use", "make our README look professional", "how should we organise this repo". Three modes - stack selection, written artifacts (README/CONTRIBUTING/docs), and repository conventions (layout, commits, CI, lint, AGENTS.md). Not for writing something with no comparable project to compare against, and never for copying source code.
+description: Use when an artifact or an implementation should follow the conventions proven by excellent open-source projects rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "what stack do similar projects use", "make our README look professional", "how should we organise this repo". Four modes - stack selection, implementation shape (module boundaries, data model, error strategy, extension points), written artifacts (README/CONTRIBUTING/docs), and repository conventions (layout, commits, CI, lint, AGENTS.md). Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
   version: "0.1.0"
@@ -16,8 +16,8 @@ comparable projects, here is what their READMEs actually contain, and here is wh
 will contain and why".
 
 The failure this skill exists to prevent is **confident invention** — a plausible-looking
-conventions section, a stack recommendation, a star count, a license, all generated from
-memory. Every one of those is checkable, and a human will check.
+conventions section, a stack recommendation, a star count, a license, an implementation,
+all generated from memory. Every one of those is checkable, and a human will check.
 
 ## The one rule
 
@@ -34,6 +34,7 @@ Pick exactly one mode, then read the reference files it names before doing anyth
 | If the question is | Mode | Read |
 |---|---|---|
 | "What stack / library / architecture should we use?" | **stack** | [reference/mimic-stack.md](reference/mimic-stack.md) |
+| "How should we implement X? What shape should this module take?" | **implementation** | [reference/mimic-implementation.md](reference/mimic-implementation.md) |
 | "Write / fix / restructure our README, docs, CONTRIBUTING" | **artifact** | [reference/mimic-readme.md](reference/mimic-readme.md) |
 | "How should this repo be organised? commits, CI, lint, agent rules" | **conventions** | [reference/mimic-conventions.md](reference/mimic-conventions.md) |
 
@@ -60,8 +61,9 @@ finish the first one before starting the second. Do not blend them into one pass
 4. **Decide.** Separate repository facts from your own judgement, and label each one.
    State what you will adopt, what you will deliberately not adopt, and why. Run the
    license gate in [licensing.md](reference/licensing.md) before adopting anything.
-5. **Write and self-check.** Produce the artifact — a real file, on disk, not a chat
-   suggestion. Then run the completion gate below and report it.
+5. **Write and self-check.** Produce the artifact — a real file on disk, not a chat
+   suggestion. In implementation mode the artifact is the changed source plus its
+   provenance block. Then run the completion gate below and report it.
 
 ## Completion gate
 
@@ -73,7 +75,8 @@ Do not report success until every line holds. Report the gate itself as part of 
 - [ ] Facts and judgements visibly separated.
 - [ ] License checked for every project whose content influenced the result.
 - [ ] No source code copied. Structure and conventions only.
-- [ ] The artifact exists as a file on disk, and you name its path.
+- [ ] The artifact exists on disk and you name its path — a written file, or in
+      implementation mode the changed sources plus a provenance block.
 - [ ] An explicit "adopted / deliberately not adopted / reason" list.
 - [ ] Remaining uncertainty named rather than smoothed over.
 
@@ -84,7 +87,9 @@ Do not report success until every line holds. Report the gate itself as part of 
   would have checked.
 - **Never copy code.** Read how a project structures something; write your own
   implementation. License compatibility is a permission question, not a permission to copy
-  — see [licensing.md](reference/licensing.md).
+  — see [licensing.md](reference/licensing.md). In implementation mode this is enforced by
+  the clean-room two-step in [mimic-implementation.md](reference/mimic-implementation.md):
+  describe the pattern in your own words first, close the source, then write.
 - **Never let one project be the answer.** A single admired repository is a taste, not a
   convention. Three is the floor.
 - **Never mimic decoration.** Emoji headers, badge walls, and colour schemes are not
