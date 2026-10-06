@@ -1,0 +1,16 @@
+# Normalise to LF in the repository; check out what each platform needs.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF to run under cmd/PowerShell hosts.
+*.ps1  text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# Shell entry points must stay LF or the shebang breaks on Linux and macOS.
+*.sh   text eol=lf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary

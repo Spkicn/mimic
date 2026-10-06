@@ -1,0 +1,21 @@
+{
+  "name": "mimic",
+  "owner": {
+    "name": "mimic contributors"
+  },
+  "metadata": {
+    "description": "Research-first skill for imitating the conventions of comparable open-source projects",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mimic",
+      "description": "Look at comparable open-source projects before choosing a stack, writing a README, or setting repository conventions",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/mimic"
+      ]
+    }
+  ]
+}

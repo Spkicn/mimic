@@ -1,0 +1,11 @@
+# mimic-probe cache
+.mimic-cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node (only used if you run ad-hoc tooling)
+node_modules/

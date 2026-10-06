@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate skill layout and frontmatter
+        run: node scripts/validate.mjs
+      - name: Check the probe script parses
+        run: node --check skills/mimic/scripts/mimic-probe.mjs
+      - name: Check the installers are syntactically valid
+        run: |
+          sh -n install.sh
+          bash -n install.sh
