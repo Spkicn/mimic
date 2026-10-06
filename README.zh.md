@@ -2,6 +2,8 @@
 
 **先看同类项目实际怎么做，再决定这个项目怎么做。**
 
+[![CI](https://github.com/Spkicn/mimic/actions/workflows/ci.yml/badge.svg)](https://github.com/Spkicn/mimic/actions/workflows/ci.yml)
+
 `mimic` 是一个 [Agent Skill](https://agentskills.io)，用在"答案不该来自模型自己的习惯"的场合。
 选技术栈、写 README、定仓库规范——每一件事都有上百个做得好的开源项目已经解决过，而且它们的
 选择是**可核查的**；模型自己的默认值不是。
@@ -25,7 +27,7 @@
 **DSH**
 
 ```powershell
-git clone https://github.com/<you>/mimic.git
+git clone https://github.com/Spkicn/mimic.git
 cd mimic
 ./install.ps1                 # 装到 ~/.dsh/skills
 ./install.ps1 -Target project-dsh -ProjectPath C:\code\myapp
@@ -34,7 +36,7 @@ cd mimic
 **Claude Code**
 
 ```
-/plugin marketplace add <you>/mimic
+/plugin marketplace add Spkicn/mimic
 /plugin install mimic@mimic
 ```
 

@@ -2,6 +2,8 @@
 
 **Look at what comparable projects actually do — before deciding what this one should do.**
 
+[![CI](https://github.com/Spkicn/mimic/actions/workflows/ci.yml/badge.svg)](https://github.com/Spkicn/mimic/actions/workflows/ci.yml)
+
 `mimic` is an [Agent Skill](https://agentskills.io) for the moment when the answer should
 not come from the model's own habits. Choosing a stack, writing a README, setting up a
 repository's conventions: each of these has a hundred well-run open-source projects that
@@ -28,7 +30,7 @@ evidence and the licence check attached.
 **DSH**
 
 ```powershell
-git clone https://github.com/<you>/mimic.git
+git clone https://github.com/Spkicn/mimic.git
 cd mimic
 ./install.ps1                 # -> ~/.dsh/skills
 ./install.ps1 -Target project-dsh -ProjectPath C:\code\myapp
@@ -37,7 +39,7 @@ cd mimic
 **Claude Code**
 
 ```
-/plugin marketplace add <you>/mimic
+/plugin marketplace add Spkicn/mimic
 /plugin install mimic@mimic
 ```
 
