@@ -12,15 +12,23 @@
  *   node mimic-probe.mjs owner/repo --max-chars 4000
  *
  * Env:
- *   GITHUB_TOKEN   raises the API rate limit (strongly recommended for 3+ repos)
+ *   GITHUB_TOKEN   raises the API rate limit. When it is unset the script falls back to
+ *                  `gh auth token`, so an environment already logged in with the GitHub
+ *                  CLI works without exporting anything.
  *   MIMIC_CACHE    cache directory (default: ./.mimic-cache)
+ *   MIMIC_TIMEOUT_MS  per-request timeout (default: 30000)
+ *
+ * Exit codes: 0 clean, 2 usage error, 3 a repository failed, 4 completed with degraded data
+ * (a repository's recursive tree was unavailable; its metadata and README are still shown).
  */
 
 import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
+import { execFileSync } from "node:child_process";
 
 const CACHE_DIR = process.env.MIMIC_CACHE || ".mimic-cache";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const FETCH_TIMEOUT_MS = Number(process.env.MIMIC_TIMEOUT_MS) || 30000;
 const API = "https://api.github.com";
 
 const MANIFESTS = [
@@ -43,13 +51,52 @@ function parseArgs(argv) {
   return opts;
 }
 
+/**
+ * Resolve an API token. An exported GITHUB_TOKEN wins; otherwise borrow the one the
+ * GitHub CLI already holds. Requiring an exported variable made the script unusable in
+ * an environment that was authenticated but had never exported anything.
+ * @returns the token, or null to continue unauthenticated.
+ */
+let tokenResolved = false;
+let tokenValue = null;
+function githubToken() {
+  if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
+  if (tokenResolved) return tokenValue;
+  tokenResolved = true;
+  try {
+    tokenValue = execFileSync("gh", ["auth", "token"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5000,
+    }).trim() || null;
+  } catch {
+    tokenValue = null; // gh absent, logged out, or the sandbox denied the spawn
+  }
+  return tokenValue;
+}
+
 function headers(accept = "application/vnd.github+json") {
   const h = { "User-Agent": "mimic-skill", Accept: accept, "X-GitHub-Api-Version": "2022-11-28" };
-  if (process.env.GITHUB_TOKEN) h.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  const token = githubToken();
+  if (token) h.Authorization = `Bearer ${token}`;
   return h;
 }
 
-async function cached(key, url, { raw = false } = {}) {
+/**
+ * Report whether an error came from our own abort signal. The abort surfaces in several
+ * shapes depending on where it lands — a DOMException, or a TypeError from fetch whose
+ * `cause` holds it — so the whole chain is checked.
+ * @param error - the caught value.
+ * @returns whether the request was cut short by the timeout signal.
+ */
+function signalAborted(error) {
+  for (let current = error; current; current = current.cause) {
+    if (current.name === "TimeoutError" || current.name === "AbortError") return true;
+  }
+  return false;
+}
+
+async function cached(key, url, { raw = false, timeoutMs = FETCH_TIMEOUT_MS } = {}) {
   const file = join(CACHE_DIR, key.replace(/[^a-zA-Z0-9._-]/g, "_") + ".json");
   try {
     const info = await stat(file);
@@ -62,8 +109,16 @@ async function cached(key, url, { raw = false } = {}) {
   let res;
   try {
     // Ask for the raw body directly; fall back to decoding the base64 contents payload.
-    res = await fetch(url, { headers: headers(raw ? "application/vnd.github.raw" : undefined) });
+    // The timeout matters: a very large repository's recursive tree can otherwise hold the
+    // whole run open indefinitely.
+    res = await fetch(url, {
+      headers: headers(raw ? "application/vnd.github.raw" : undefined),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
   } catch (error) {
+    if (signalAborted(error)) {
+      throw new Error(`timed out after ${timeoutMs}ms fetching ${url} (raise MIMIC_TIMEOUT_MS)`);
+    }
     throw new Error(`network unreachable for ${url}: ${error.message}`);
   }
   if (res.status === 404) return { data: null, cache: "404" };
@@ -72,21 +127,31 @@ async function cached(key, url, { raw = false } = {}) {
   }
   if (!res.ok) return { data: null, cache: `HTTP ${res.status}` };
 
+  // Reading the body belongs inside the timeout guard too: fetch resolves once the headers
+  // arrive, so a large response can still be streaming when the signal fires, and an
+  // unguarded res.text() then throws an unwrapped abort instead of a usable message.
   let data;
-  if (raw) {
-    const text = await res.text();
-    const type = res.headers.get("content-type") ?? "";
-    if (type.includes("json")) {
-      let payload = null;
-      try { payload = JSON.parse(text); } catch { payload = null; }
-      data = typeof payload?.content === "string"
-        ? Buffer.from(payload.content, "base64").toString("utf8")
-        : null;
+  try {
+    if (raw) {
+      const text = await res.text();
+      const type = res.headers.get("content-type") ?? "";
+      if (type.includes("json")) {
+        let payload = null;
+        try { payload = JSON.parse(text); } catch { payload = null; }
+        data = typeof payload?.content === "string"
+          ? Buffer.from(payload.content, "base64").toString("utf8")
+          : null;
+      } else {
+        data = text;
+      }
     } else {
-      data = text;
+      data = await res.json();
     }
-  } else {
-    data = await res.json();
+  } catch (error) {
+    if (signalAborted(error)) {
+      throw new Error(`timed out after ${timeoutMs}ms reading the body of ${url} (raise MIMIC_TIMEOUT_MS)`);
+    }
+    throw new Error(`unreadable response body from ${url}: ${error.message}`);
   }
 
   await mkdir(dirname(file), { recursive: true });
@@ -103,10 +168,51 @@ async function probeRepo(slug) {
   if (!meta) return { slug, error: "repository not found (or private)" };
 
   const readmeRaw = (await cached(`readme_${owner}_${name}`, `${root}/readme`, { raw: true })).data;
-  const tree = (await cached(`tree_${owner}_${name}`, `${root}/contents/`)).data;
+
+  // One recursive tree call lists every path, so the manifests that exist can be fetched
+  // directly instead of probing for the twelve that usually do not. The blind probe cost
+  // up to twelve requests per repository and is what pushed a run into the rate limit.
+  const branch = meta.default_branch;
+  let entries = [];
+  let treeTruncated = false;
+  let treeNote = null;
+
+  try {
+    const tree = (await cached(`tree_${owner}_${name}_${branch}`, `${root}/git/trees/${encodeURIComponent(branch)}?recursive=1`)).data;
+    entries = Array.isArray(tree?.tree) ? tree.tree : [];
+    treeTruncated = tree?.truncated === true;
+  } catch (error) {
+    // The tree is an index, not the answer. Losing it must not lose the metadata and README
+    // that already succeeded, so record the reason and degrade to the contents listing.
+    treeNote = `recursive tree unavailable: ${error.message}`;
+  }
+
+  let rootEntries = [];
+  let fileCount = null;
+  let present = [];
+
+  if (entries.length > 0 && !treeTruncated) {
+    const rootDirs = entries.filter((e) => e.type === "tree" && !e.path.includes("/")).map((e) => `${e.path}/`);
+    const rootFiles = entries.filter((e) => e.type === "blob" && !e.path.includes("/")).map((e) => e.path);
+    rootEntries = [...rootDirs, ...rootFiles].sort();
+    present = MANIFESTS.filter((m) => rootFiles.includes(m));
+    fileCount = entries.filter((e) => e.type === "blob").length;
+  } else {
+    // Very large repositories truncate the tree response; fall back to the contents listing
+    // so root entries and manifests stay correct rather than silently empty.
+    try {
+      const listing = (await cached(`contents_${owner}_${name}`, `${root}/contents/`)).data;
+      rootEntries = Array.isArray(listing)
+        ? listing.map((e) => `${e.name}${e.type === "dir" ? "/" : ""}`).sort()
+        : [];
+    } catch (error) {
+      treeNote ??= `contents listing unavailable: ${error.message}`;
+    }
+    present = MANIFESTS.filter((m) => rootEntries.includes(m));
+  }
 
   const manifests = {};
-  for (const m of MANIFESTS) {
+  for (const m of present) {
     const hit = await cached(`file_${owner}_${name}_${m}`, `${root}/contents/${m}`, { raw: true });
     if (hit.data) manifests[m] = String(hit.data).slice(0, 2000);
   }
@@ -128,7 +234,10 @@ async function probeRepo(slug) {
     defaultBranch: meta.default_branch,
     homepage: meta.homepage || null,
     readme: typeof readmeRaw === "string" ? readmeRaw : null,
-    rootEntries: Array.isArray(tree) ? tree.map((e) => `${e.name}${e.type === "dir" ? "/" : ""}`) : [],
+    rootEntries,
+    fileCount,
+    treeTruncated,
+    treeNote,
     manifests,
   };
 }
@@ -141,6 +250,10 @@ function render(repo, maxChars) {
   L.push(`   pushed ${repo.pushedAt} | created ${repo.createdAt} | archived ${repo.archived} | open issues ${repo.openIssues}`);
   if (repo.topics.length) L.push(`   topics: ${repo.topics.join(", ")}`);
   L.push(`   root: ${repo.rootEntries.join("  ") || "(empty)"}`);
+  if (repo.fileCount !== null && repo.fileCount !== undefined) {
+    L.push(`   files tracked: ${repo.fileCount}${repo.treeTruncated ? " (tree truncated)" : ""}`);
+  }
+  if (repo.treeNote) L.push(`   partial: ${repo.treeNote}`);
 
   const names = Object.keys(repo.manifests);
   if (names.length) {
@@ -188,7 +301,7 @@ async function main() {
   }
 
   if (!opts.repos.length) {
-    console.error("usage: node mimic-probe.mjs [--json] [--readme] [--max-chars N] <owner/repo> [...]");
+    console.error("usage: node mimic-probe.mjs [--json] [--max-chars N] <owner/repo> [...]");
     console.error("       node mimic-probe.mjs --search \"<query>\" [--language <lang>]");
     process.exit(2);
   }
@@ -202,6 +315,11 @@ async function main() {
       process.exitCode = 3;
     }
   }
+
+  // A repository that resolves to "not found" returns rather than throws, so it has to be
+  // counted here too. Exiting 0 after a failed lookup would report a partial run as clean.
+  if (results.some((r) => r.error)) process.exitCode = 3;
+  else if (results.some((r) => r.treeNote)) process.exitCode = 4;
 
   if (opts.json) { console.log(JSON.stringify(results, null, 2)); return; }
 

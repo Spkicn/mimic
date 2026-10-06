@@ -8,7 +8,9 @@ gets better, and it is the reason the repository exists.
 
 ## Before you open a PR
 
-1. Run `node scripts/validate.mjs`. It is the only gate, and CI runs the same command.
+1. Run `node scripts/validate.mjs` and `node scripts/validate.test.mjs`. CI runs both.
+   If you added a rule to the validator, add the fixture that makes it fire — a rule with no
+   failing fixture is a rule nobody has seen work.
 2. If you changed a rule, name the case that made it necessary.
 3. If you changed the mode table, the install paths, or the repository structure, update
    both `README.md` and `README.zh.md`.

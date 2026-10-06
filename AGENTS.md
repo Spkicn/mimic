@@ -15,6 +15,9 @@ choosing a stack, writing an artifact, or setting repository conventions.
 Every command below is verified to run from the repository root.
 
 - **Validate everything (the only gate):** `node scripts/validate.mjs`
+- **Test the validator:** `node scripts/validate.test.mjs` — offline fixtures that must fail,
+  one per rule. A check that never fires is indistinguishable from a check never written, so
+  every new rule in the validator needs a fixture here.
 - **Parse-check the scripts:** `node --check scripts/validate.mjs` and
   `node --check skills/mimic/scripts/mimic-probe.mjs`
 - **Smoke-test the probe against a live repository:**
@@ -22,8 +25,10 @@ Every command below is verified to run from the repository root.
 - **Install locally:** `./install.ps1` (Windows) or `./install.sh` (POSIX); add `-List` /
   `--list` for a dry run, `-Force` / `--force` to overwrite.
 
-There is no build step, no dependency install, and no test suite. Both scripts are
-stdlib-only Node 18+; `mimic-probe.mjs` needs network access and honours `GITHUB_TOKEN`.
+There is no build step and no dependency install. Both scripts are stdlib-only Node 18+;
+`mimic-probe.mjs` needs network access, takes `GITHUB_TOKEN` or falls back to
+`gh auth token`, and exits 0 clean / 2 usage / 3 failed / 4 degraded — never 0 after a
+partial fetch.
 
 ## Non-negotiable conventions
 
@@ -52,5 +57,6 @@ stdlib-only Node 18+; `mimic-probe.mjs` needs network access and honours `GITHUB
 - The skill: `skills/mimic/SKILL.md`
 - The rulebook: `skills/mimic/reference/` — start with `selecting-repos.md` and `evidence.md`
 - The fetcher: `skills/mimic/scripts/mimic-probe.mjs`
-- CI: `.github/workflows/ci.yml` — runs the same `node scripts/validate.mjs`
+- CI: `.github/workflows/ci.yml` — runs the validator, its fixture tests, the parse checks,
+  and the installer syntax checks
 - Contribution rules: `CONTRIBUTING.md`

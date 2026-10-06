@@ -103,7 +103,8 @@ skills/mimic/
 AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它
 CONTRIBUTING.md                 # 怎么贡献，以及什么样的报告有用
 scripts/validate.mjs            # 自检：frontmatter、description 单行、25–150 行区间、路由、链接
-.github/workflows/ci.yml        # 每次 push / PR 跑一遍自检
+scripts/validate.test.mjs       # 离线 fixture 测试，校验器每一条规则各一个
+.github/workflows/ci.yml        # 每次 push 跑自检、fixture 测试与语法检查
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code 插件清单
 install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
@@ -140,9 +141,9 @@ install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
 欢迎 issue 和 PR，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。最有价值的贡献是**失败报告**：agent
 断言了它没有抓取过的仓库信息，或者采纳了一条不适合本项目的约定。这些会变成 reference 里的硬性红线。
 
-提交 PR 前请先跑 `node scripts/validate.mjs`——CI 跑的是同一个检查。请保持 `SKILL.md` 在 25–150
-行之间，细节放进 `reference/`；这是本仓库自己的约定，校验脚本两端都会强制执行。面向 agent 的规则写在
-[AGENTS.md](AGENTS.md)。
+提交 PR 前请先跑 `node scripts/validate.mjs` 和 `node scripts/validate.test.mjs`——CI 两个都跑。
+请保持 `SKILL.md` 在 25–150 行之间，细节放进 `reference/`；这是本仓库自己的约定，校验脚本两端
+都会强制执行。面向 agent 的规则写在 [AGENTS.md](AGENTS.md)。
 
 ## License
 

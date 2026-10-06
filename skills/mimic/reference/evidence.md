@@ -51,8 +51,9 @@ so the reader knows how much weight each project's analysis carries.
   README, root tree, and manifests, caches them under `.mimic-cache/`, and prints a bounded
   summary. Prefer it over ad-hoc fetching: it is cached, it truncates, and it never
   embellishes. Use `--json` when you need the raw shape.
-- **Set `GITHUB_TOKEN`** when available. Unauthenticated API limits are low enough that a
-  five-repo pass can be throttled mid-research.
+- **Use a token.** The probe reads `GITHUB_TOKEN`, and when that is unset it falls back to
+  `gh auth token`, so an environment already logged in with the GitHub CLI needs no export.
+  Unauthenticated limits are low enough that a five-repo pass gets throttled mid-research.
 - **Never fetch the same thing twice.** The cache exists for this; a repeat fetch is a
   signal that the research plan is drifting.
 - **Bounded output.** Truncate READMEs and trees. A 4,000-line README read in full is

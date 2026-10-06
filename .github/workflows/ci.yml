@@ -15,8 +15,12 @@ jobs:
           node-version: "20"
       - name: Validate skill layout and frontmatter
         run: node scripts/validate.mjs
-      - name: Check the probe script parses
-        run: node --check skills/mimic/scripts/mimic-probe.mjs
+      - name: Test the validator against its fixtures
+        run: node scripts/validate.test.mjs
+      - name: Check the scripts parse
+        run: |
+          node --check scripts/validate.mjs
+          node --check skills/mimic/scripts/mimic-probe.mjs
       - name: Check the installers are syntactically valid
         run: |
           sh -n install.sh

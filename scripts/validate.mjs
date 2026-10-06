@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Repo self-check. Run with `node scripts/validate.mjs` from the repository root.
+ * Repo self-check. Run with `node scripts/validate.mjs` from the repository root, or pass a
+ * path to validate a fixture tree: `node scripts/validate.mjs <root>`.
  *
  * Enforces this repository's own conventions:
  *   - every skills * /SKILL.md has valid frontmatter (name, description, no legacy keys)
@@ -17,7 +18,11 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+// An explicit root makes the validator testable against fixtures; the default is this
+// repository, which is what CI and the AGENTS.md gate use.
+const ROOT = process.argv[2]
+  ? resolve(process.argv[2])
+  : resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LEGACY_KEYS = ["userInvocable", "modelInvocable", "disableModelInvocation"];
 const SKILL_LINE_FLOOR = 25;
