@@ -34,8 +34,20 @@ function check(name, condition, detail = "") {
   }
 }
 
+/** A minimal eval file that satisfies the required case counts. */
+function evalCases({ triggers = 8, negatives = 8, quality = 1 } = {}) {
+  return JSON.stringify({
+    skill: "fixture-skill",
+    cases: [
+      ...Array.from({ length: triggers }, (_, i) => ({ type: "should_trigger", prompt: `trigger prompt ${i}` })),
+      ...Array.from({ length: negatives }, (_, i) => ({ type: "should_not_trigger", prompt: `negative prompt ${i}` })),
+      ...Array.from({ length: quality }, (_, i) => ({ type: "quality", prompt: `quality prompt ${i}`, expected_behavior: ["does the thing"] })),
+    ],
+  });
+}
+
 /** Write a fixture tree that passes, then return its root. */
-function makeFixture(root, { skillName = "fixture-skill" } = {}) {
+function makeFixture(root, { skillName = "fixture-skill", evals = evalCases() } = {}) {
   const skillDir = join(root, "skills", skillName);
   mkdirSync(skillDir, { recursive: true });
   mkdirSync(join(root, ".claude-plugin"), { recursive: true });
@@ -46,6 +58,10 @@ function makeFixture(root, { skillName = "fixture-skill" } = {}) {
     "utf8",
   );
   writeFileSync(join(skillDir, "SKILL.md"), skillBody(skillName), "utf8");
+  if (evals !== null) {
+    mkdirSync(join(skillDir, "evals"), { recursive: true });
+    writeFileSync(join(skillDir, "evals", "evals.json"), evals, "utf8");
+  }
   return skillDir;
 }
 
@@ -190,6 +206,34 @@ try {
     mkdirSync(join(root, "skills"), { recursive: true });
     const { status, output } = runValidator(root);
     check("empty tree fails", status === 1 && /no SKILL\.md found/.test(output), `exit ${status}`);
+  }
+
+  // 12. The description is the router, so a skill without trigger cases is untested.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root, { evals: null });
+    const { status, output } = runValidator(root);
+    check("missing evals fails", status === 1 && /no evals\/evals\.json/.test(output), `exit ${status}`);
+  }
+
+  // 13. Too few cases is not the same as having them.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root, { evals: evalCases({ triggers: 3, negatives: 3 }) });
+    const { status, output } = runValidator(root);
+    check(
+      "too few trigger cases fails",
+      status === 1 && /3 should_trigger cases, 8 required/.test(output),
+      `exit ${status}`,
+    );
+  }
+
+  // 14. Unparseable cases fail rather than passing silently.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root, { evals: "{ not json" });
+    const { status, output } = runValidator(root);
+    check("unparseable evals fails", status === 1 && /not valid JSON/.test(output), `exit ${status}`);
   }
 } finally {
   rmSync(sandbox, { recursive: true, force: true });

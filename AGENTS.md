@@ -18,8 +18,15 @@ Every command below is verified to run from the repository root.
 - **Test the validator:** `node scripts/validate.test.mjs` — offline fixtures that must fail,
   one per rule. A check that never fires is indistinguishable from a check never written, so
   every new rule in the validator needs a fixture here.
-- **Parse-check the scripts:** `node --check scripts/validate.mjs` and
-  `node --check skills/mimic/scripts/mimic-probe.mjs`
+- **Check the routing layer:** `node scripts/eval-routing.mjs`. Tier 1 above proves the skill
+  is well formed; it cannot prove the skill ever runs, because the `description` is the
+  router. This scores every `evals/evals.json` prompt against every description in the
+  catalog — positive prompts must rank their skill first, negative prompts must not, and two
+  descriptions must not near-collide. Add `--catalog <dir>` to test against a host skills
+  directory, `--explain` to print the scores, `--min-rank1 <pct>` for the floor.
+  **A failure here usually means fix the description, not the eval.**
+- **Parse-check the scripts:** `node --check` on each file in `scripts/` and
+  `skills/mimic/scripts/`
 - **Smoke-test the probe against a live repository:**
   `node skills/mimic/scripts/mimic-probe.mjs sindresorhus/got --max-chars 400`
 - **Install locally:** `./install.ps1` (Windows) or `./install.sh` (POSIX); add `-List` /
@@ -34,6 +41,10 @@ partial fetch.
 
 - **Skill body: 25–150 lines.** Longer material goes to `reference/`, one level deep. Every
   file in `reference/` must be routed to from `SKILL.md`; the validator fails otherwise.
+- **Every skill ships `evals/evals.json`** — at least 8 `should_trigger`, 8
+  `should_not_trigger`, and 1 `quality` case. The validator enforces the counts, and
+  `eval-routing.mjs` enforces that they pass. Tiers adopted from `Paldom/github-skills` and
+  `addyosmani/agent-skills` (both MIT): structural, routing, behavioural.
 - **The reference directory is `reference/`**, singular. Some comparable repositories use
   `references/`; this repository's existing habit wins over an outside project's.
 - **`name` equals the folder name, kebab-case.** Only `name` and `description` are required.

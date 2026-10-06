@@ -17,9 +17,12 @@ jobs:
         run: node scripts/validate.mjs
       - name: Test the validator against its fixtures
         run: node scripts/validate.test.mjs
+      - name: Check the routing layer
+        run: node scripts/eval-routing.mjs
       - name: Check the scripts parse
         run: |
           node --check scripts/validate.mjs
+          node --check scripts/eval-routing.mjs
           node --check skills/mimic/scripts/mimic-probe.mjs
       - name: Check the installers are syntactically valid
         run: |

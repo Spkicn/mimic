@@ -27,6 +27,8 @@ const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LEGACY_KEYS = ["userInvocable", "modelInvocable", "disableModelInvocation"];
 const SKILL_LINE_FLOOR = 25;
 const SKILL_LINE_BUDGET = 150;
+const EVAL_MIN_TRIGGERS = 8;
+const EVAL_MIN_NEGATIVES = 8;
 const SKIP_DIRS = new Set([".git", ".mimic-cache", "node_modules"]);
 
 let failures = 0;
@@ -106,6 +108,34 @@ for (const file of skillFiles) {
       if (!existsSync(join(referenceDir, route[1]))) fail(`${rel}: routes to missing reference/${route[1]}`);
     }
     ok(`${rel}: ${onDisk.length} reference file(s) routed`);
+  }
+
+  // Tier 2 cases are part of the skill, not an optional extra: the description is the
+  // router, and a router nobody has written prompts for has never been tested. Adopted from
+  // Paldom/github-skills and addyosmani/agent-skills, which both ship evals per skill.
+  const evalPath = join(dirname(file), "evals", "evals.json");
+  if (!existsSync(evalPath)) {
+    fail(`${rel}: no evals/evals.json — the description is the router and it is untested`);
+  } else {
+    let parsed = null;
+    try {
+      parsed = JSON.parse(readFileSync(evalPath, "utf8"));
+    } catch (error) {
+      fail(`${rel}: evals/evals.json is not valid JSON: ${error.message}`);
+    }
+    if (parsed) {
+      const cases = Array.isArray(parsed.cases) ? parsed.cases : [];
+      const count = (type) => cases.filter((c) => c?.type === type).length;
+      const triggers = count("should_trigger");
+      const negatives = count("should_not_trigger");
+      const quality = count("quality");
+      if (triggers < EVAL_MIN_TRIGGERS) fail(`${rel}: ${triggers} should_trigger cases, ${EVAL_MIN_TRIGGERS} required`);
+      if (negatives < EVAL_MIN_NEGATIVES) fail(`${rel}: ${negatives} should_not_trigger cases, ${EVAL_MIN_NEGATIVES} required`);
+      if (quality < 1) fail(`${rel}: no quality cases`);
+      if (triggers >= EVAL_MIN_TRIGGERS && negatives >= EVAL_MIN_NEGATIVES && quality >= 1) {
+        ok(`${rel}: evals — ${triggers} trigger, ${negatives} negative, ${quality} quality`);
+      }
+    }
   }
 }
 

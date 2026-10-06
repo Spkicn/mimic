@@ -1,0 +1,59 @@
+{
+  "skill": "mimic",
+  "note": "Tier 2 cases: do the prompts route here, and does the description carry the vocabulary people actually use. Tier 3 (behavioural) cases are the quality entries below, which need an agent and are graded by review rather than by this repo's CI.",
+  "cases": [
+    { "type": "should_trigger", "prompt": "find similar projects on GitHub and see how they do it" },
+    { "type": "should_trigger", "prompt": "我们的 README 写得很敷衍，去 GitHub 上找几个同类项目看看别人的规范" },
+    { "type": "should_trigger", "prompt": "how should we implement a retry mechanism, what's the idiomatic way" },
+    { "type": "should_trigger", "prompt": "benchmark our repo against comparable projects before we pick a stack" },
+    { "type": "should_trigger", "prompt": "这个仓库该怎么组织？目录结构、commit 规范、CI 配置" },
+    { "type": "should_trigger", "prompt": "what stack do similar projects use for a CLI like this" },
+    { "type": "should_trigger", "prompt": "make our README look professional" },
+    { "type": "should_trigger", "prompt": "我要给这个项目加个重试机制，先看看同类项目怎么实现的再动手" },
+    { "type": "should_trigger", "prompt": "how is this normally structured in real projects" },
+    { "type": "should_trigger", "prompt": "参考同类开源项目，看看别人是怎么写的" },
+    { "type": "should_trigger", "prompt": "can u check how other repos do their contributing guide" },
+
+    { "type": "should_not_trigger", "prompt": "rename this variable to something clearer" },
+    { "type": "should_not_trigger", "prompt": "there is a typo on line 42, fix it" },
+    { "type": "should_not_trigger", "prompt": "implement a bubble sort in TypeScript" },
+    { "type": "should_not_trigger", "prompt": "why is this test failing?" },
+    { "type": "should_not_trigger", "prompt": "review my pull request for bugs" },
+    { "type": "should_not_trigger", "prompt": "design a nicer landing page for the docs site" },
+    { "type": "should_not_trigger", "prompt": "make a 30-second promo video for this project" },
+    { "type": "should_not_trigger", "prompt": "upgrade to the latest version of the framework" },
+    { "type": "should_not_trigger", "prompt": "add a dark mode toggle to the settings page" },
+    { "type": "should_not_trigger", "prompt": "什么是 MIT 许可证" },
+
+    {
+      "type": "quality",
+      "prompt": "our repo's README is thin — make it follow what comparable projects actually do",
+      "expected_behavior": [
+        "names 3 to 5 comparable repositories, each with a stated reason for inclusion",
+        "records at least one rejected candidate and the reason for rejecting it",
+        "checks the licence of every source before adopting anything from it",
+        "writes README.md on disk and names its path",
+        "gives an explicit adopted / deliberately-not-adopted list"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "给这个项目选个技术栈，别拍脑袋",
+      "expected_behavior": [
+        "states the binding constraint before naming any option",
+        "reads dependency manifests rather than trusting the README's stack claims",
+        "reports pushed_at and licence for every candidate, fetched rather than recalled",
+        "writes a decision record to disk rather than answering only in chat"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "our project has nothing comparable that I can think of",
+      "expected_behavior": [
+        "names the capability it is missing, then searches that discipline's vocabulary rather than the tool's",
+        "says what it would search and why, instead of inventing repositories or star counts",
+        "if GitHub is unreachable, stops and reports it rather than reconstructing facts from memory"
+      ]
+    }
+  ]
+}

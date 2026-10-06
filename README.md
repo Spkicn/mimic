@@ -107,10 +107,12 @@ skills/mimic/
     mimic-readme.md             # mode: artifact -> file on disk
     mimic-conventions.md        # mode: conventions -> layout, CI, AGENTS.md
   scripts/mimic-probe.mjs       # dependency-free GitHub fetcher with caching
+  evals/evals.json              # Tier 2 cases: trigger, near-miss negative, quality
 AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it
 CONTRIBUTING.md                 # how to contribute, and what makes a useful report
-scripts/validate.mjs            # self-check: frontmatter, single-line description, 25-150 band, routing, links
+scripts/validate.mjs            # Tier 1 self-check: frontmatter, single-line description, 25-150 band, routing, evals, links
 scripts/validate.test.mjs       # offline fixtures, one per rule the validator enforces
+scripts/eval-routing.mjs        # Tier 2: does the description actually route here
 .github/workflows/ci.yml        # runs the self-check, its tests and the parse checks on every push
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code plugin manifest

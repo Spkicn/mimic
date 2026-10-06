@@ -102,10 +102,12 @@ skills/mimic/
     mimic-readme.md             # 模式：artifact -> 落盘文件
     mimic-conventions.md        # 模式：conventions -> 结构、CI、AGENTS.md
   scripts/mimic-probe.mjs       # 零依赖、带缓存的 GitHub 抓取器
+  evals/evals.json              # Tier 2 用例：触发、近似误触、质量
 AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它
 CONTRIBUTING.md                 # 怎么贡献，以及什么样的报告有用
-scripts/validate.mjs            # 自检：frontmatter、description 单行、25–150 行区间、路由、链接
+scripts/validate.mjs            # Tier 1 自检：frontmatter、description 单行、25–150 行区间、路由、evals、链接
 scripts/validate.test.mjs       # 离线 fixture 测试，校验器每一条规则各一个
+scripts/eval-routing.mjs        # Tier 2：这个 description 到底会不会被路由到
 .github/workflows/ci.yml        # 每次 push 跑自检、fixture 测试与语法检查
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code 插件清单
