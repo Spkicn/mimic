@@ -52,9 +52,10 @@ finish the first one before starting the second. Do not blend them into one pass
 1. **Frame.** Restate the goal in one sentence. Ask at most three questions, and only ones
    that change which projects count as comparable. If the request is too vague to identify
    a category, say so and ask — do not start searching.
-2. **Select.** Find 3–5 comparable projects using
-   [selecting-repos.md](reference/selecting-repos.md). Record why each was included and
-   what was rejected. Comparability beats popularity.
+2. **Select.** Name the capability you are missing before you search — searching your own
+   stack returns peers, not teachers. Find 3–5 comparable projects using
+   [selecting-repos.md](reference/selecting-repos.md), covering more than one knowledge layer.
+   Record why each was included and what was rejected. Comparability beats popularity.
 3. **Read.** Shallow-read all of them (metadata, README, root tree, dependency manifest);
    deep-read at most two. Fetch, never recall. Cache what you fetch. See
    [evidence.md](reference/evidence.md).
@@ -111,6 +112,7 @@ it honestly.
 | Anti-pattern | What it looks like | Do instead |
 |---|---|---|
 | **A template with a clean conscience** | Every process item passed; the output names nothing, numbers nothing, shows nothing | The substance gate at the top of [evidence.md](reference/evidence.md) |
+| **Peer-only slate** | Every comparable is another project in your own stack | Name the capability you lack, then search that discipline's vocabulary — [selecting-repos.md](reference/selecting-repos.md) |
 | Popularity theatre | "Top 5 by stars" | Filter by comparability, then report maintenance and license |
 | README-only archaeology | Claiming to know the architecture from the README | Open the tree, the manifest, and the entry point |
 | Consensus by assertion | "Most projects use X" | Name which projects, and cite the file that shows it |

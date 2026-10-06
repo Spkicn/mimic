@@ -65,6 +65,7 @@ Most "research before you build" prompts stop at a report. `mimic` closes these 
 |---|---|
 | **Substance** | At least three claims that are specific and checkable — a number, a name, a path, a version, or a quoted line from a fetch. Delete every proper noun and number: if the artifact still reads complete, it is a template, and a run can pass every other check while producing nothing. |
 | **Comparability** | 3–5 candidates filtered on problem/user/scale axes, with at least one rejection recorded. Stars are context, never a selection reason. |
+| **The right layer** | Candidates must cover more than one kind of source: **peers** (your own stack — they teach conventions), **craft sources** (the discipline behind your weak layer — they teach parameters), and **canon** (the platform itself, at HEAD). Searching your own stack only ever finds peers. |
 | **Evidence** | Every repository claim tagged E1–E4: fetched, read, corroborated, or inferred. E4 may never be stated as fact. `pushed_at`, licence, and archived status are fetched, not recalled. |
 | **Licence** | An explicit check before anything is adopted: structure and ideas transfer, expression and code do not. GPL/AGPL/unlicensed sources are flagged, not quietly used. |
 | **Closure** | The deliverable is a file on disk plus an "adopted / deliberately not adopted / reason" table — not advice in a chat window. In implementation mode the deliverable is the changed source plus its provenance block. |

@@ -17,6 +17,12 @@ problem for its user.
 **Structure and ideas are not protected by copyright in most jurisdictions. Expression and
 code are.** That is the whole rule. When in doubt, write it yourself from the idea.
 
+**Parameters are facts, not expression.** A duration, an easing curve, a stagger offset, a
+threshold, a type size — these are measurements, not someone's writing. Adopt them, cite where
+they came from, and implement them in your own code. Copying the number is not copying the
+code; copying the function that produces it is. Do not let this rule make you vague: an
+adopted parameter with a source is better than an invented one with none.
+
 ## Licence compatibility
 
 Check the source project's licence *before* adopting anything from it, and record the SPDX

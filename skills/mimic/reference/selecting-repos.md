@@ -35,6 +35,53 @@ ticket. Search for the words the field uses.
 - **Follow the citations.** A comparable project's README often names its peers in a
   "prior art" or "alternatives" section. That is a hand-curated comparable set.
 
+## Search for the layer you are weak in, not the layer you work in
+
+The default search is the one that fails. Querying your own stack or your own problem returns
+**peers** — projects that look like yours — and peers show you what things look like, not what
+makes them good.
+
+| Kind | Found by | Teaches | Example |
+|---|---|---|---|
+| **Peer** | your problem or your stack | conventions, layout, structure | `--topic=remotion` |
+| **Craft source** | the name of the discipline behind your weak layer | parameters, technique, why it feels right | `--topic=motion-graphics`, `--topic=kinetic-typography` |
+| **Canon** | the platform or format itself | what the API actually does, at HEAD | `remotion-dev/remotion` `packages/example` |
+
+A peer tells you which sections a README has. A craft source tells you the easing curve, the
+stagger offset, the duration. Those are different kinds of knowledge in different
+repositories, and the second set is not reachable from the first set's vocabulary.
+
+### Say the deficit out loud first
+
+Write one sentence: *what am I actually missing?* The words in that sentence are your search
+terms.
+
+- "I need to make a promo video" names a **deliverable**. It finds peers.
+- "my motion has no designed rhythm" names a **capability**. It finds craft sources.
+
+If the sentence names a tool, you have named a peer. Keep rewriting until it names a
+capability, then search the capability's own vocabulary rather than the tool's.
+
+### Record which layer each candidate serves
+
+Add a `layer` column to the slate. A slate of five peers and no craft source cannot answer a
+craft question, and you will not notice until after the work is built.
+
+### Worked failure
+
+A 27-second product video was researched entirely under `--topic=remotion`. That returned
+peers, and they were good ones: one scene per file, `Root.tsx` doing registration only, fonts
+and layout constants in a single module. All of it was adopted, the film passed the whole
+completion gate, and it still read as a slideshow.
+
+The knowledge that fixed it — enter with ease-out `cubic-bezier(0.16, 1, 0.3, 1)`, fragments
+400–600ms, list stagger 40–80ms capped near 700ms per group, mask reveal over a plain fade,
+and a Primary / Secondary / Ambient layer model — was in none of them. It lived under
+`motion-graphics` and `kinetic-typography`, in repositories that contain no video project at
+all.
+
+Cost: two complete rebuilds before the search vocabulary changed.
+
 ## The candidate slate
 
 Aim for 3–5, chosen deliberately rather than by rank:
