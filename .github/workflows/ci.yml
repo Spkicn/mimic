@@ -46,6 +46,9 @@ jobs:
         run: |
           sh -n install.sh
           bash -n install.sh
+          # A user runs ./install.sh; a checkout that dropped the exec bit reads as a broken
+          # installer on Linux and as nothing at all on Windows.
+          test -x install.sh
           ./install.sh --help >/dev/null
           ./install.sh --list >/dev/null
           tmp=$(mktemp -d)
