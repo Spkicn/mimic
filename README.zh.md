@@ -118,12 +118,13 @@ skills/mimic/
   evals/evals.json              # Tier 2 用例：触发、近似误触、质量
 AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它
 CONTRIBUTING.md                 # 怎么贡献，以及什么样的报告有用
-scripts/validate.mjs            # Tier 1 自检：frontmatter、宿主长度限制、25–150 行区间、路由、evals、链接、README 同步
+CHANGELOG.md                    # 一个版本号、改了什么，以及存放它的两个文件
+scripts/validate.mjs            # Tier 1 自检：frontmatter、宿主长度限制、25–150 行区间、路由、evals、链接、README 同步、版本同步
 scripts/validate.test.mjs       # 离线 fixture 测试，校验器每一条规则各一个
 scripts/eval-routing.mjs        # Tier 2：这个 description 到底会不会被路由到（对同类 description 做 BM25）
 scripts/eval-routing.test.mjs   # 路由打分的同类目录 fixture 测试
 scripts/probe.test.mjs          # 探针的离线 fixture：鉴权、缓存、截断、退出码
-.github/workflows/ci.yml        # 每次 push 跑全部检查、fixture 测试与安装脚本冒烟（Linux + Windows）
+.github/workflows/ci.yml        # 跑全部检查、fixture 测试、安装脚本冒烟（Linux + Windows）与 plugin validate
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code 插件清单
 install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
@@ -169,11 +170,13 @@ node scripts/validate.test.mjs
 node scripts/eval-routing.mjs
 node scripts/eval-routing.test.mjs
 node scripts/probe.test.mjs
+claude plugin validate .   # 需要 Claude Code CLI；CI 也会跑
 ```
 
 请保持 `SKILL.md` 在 25–150 行之间，细节放进 `reference/`；这是本仓库自己的约定，校验脚本两端
 都会强制执行。两个 README 会做结构漂移检查，所以改 `README.md` 时要同步改 `README.zh.md`。
-面向 agent 的规则写在 [AGENTS.md](AGENTS.md)。
+版本号存在两个地方——`skills/mimic/SKILL.md` 和 `.claude-plugin/marketplace.json`，两者不一致校验
+会失败；每次发布还要在 `CHANGELOG.md` 里记一笔。面向 agent 的规则写在 [AGENTS.md](AGENTS.md)。
 
 ## License
 

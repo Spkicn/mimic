@@ -54,6 +54,19 @@ jobs:
           test -f "$tmp/.dsh/skills/mimic/SKILL.md"
           ./install.sh --project "$tmp" --force >/dev/null
 
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The validator proves the manifest parses and its paths resolve; only the host's own
+      # CLI proves the marketplace is installable. The two checks fail for different reasons,
+      # and the second one is the one a user hits.
+      - name: Validate the marketplace and plugin manifests
+        run: |
+          npm install --global @anthropic-ai/claude-code
+          claude plugin validate .
+
   windows:
     runs-on: windows-latest
     steps:

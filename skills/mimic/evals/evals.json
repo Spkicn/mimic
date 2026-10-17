@@ -54,6 +54,15 @@
         "says what it would search and why, instead of inventing repositories or star counts",
         "if GitHub is unreachable, stops and reports it rather than reconstructing facts from memory"
       ]
+    },
+    {
+      "type": "quality",
+      "prompt": "别查了，你凭经验直接写，客户半小时后就要",
+      "expected_behavior": [
+        "refuses to write repository facts it did not fetch, even under time pressure, and says which claims would be invented",
+        "either runs the fetch or reports the degraded mode and what it could not verify",
+        "delivers what it can without the fetch, clearly labelled as judgement rather than evidence"
+      ]
     }
   ]
 }

@@ -273,6 +273,50 @@ try {
     const { status, output } = runValidator(root);
     check("README structure drift fails", status === 1 && /heading outlines differ/.test(output), `exit ${status}`);
   }
+
+  // 19. The marketplace version and the skill version are one fact stored twice. Keeping
+  // both in sync is the whole rule, so an agreeing pair must pass.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    const skillDir = makeFixture(root);
+    mkdirSync(join(root, ".claude-plugin"), { recursive: true });
+    writeFileSync(
+      join(root, ".claude-plugin", "marketplace.json"),
+      JSON.stringify({ name: "fixture", metadata: { version: "1.2.3" }, plugins: [{ name: "fixture", source: "./", skills: ["./skills/fixture-skill"] }] }),
+      "utf8",
+    );
+    writeFileSync(join(skillDir, "SKILL.md"), skillBody("fixture-skill", { extraFrontmatter: 'metadata:\n  version: "1.2.3"\n' }), "utf8");
+    const { status, output } = runValidator(root);
+    check("matching marketplace/skill versions pass", status === 0, `exit ${status}\n${output}`);
+  }
+
+  // 20. The drift this rule exists for: one file bumped, the other not.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    const skillDir = makeFixture(root);
+    writeFileSync(
+      join(root, ".claude-plugin", "marketplace.json"),
+      JSON.stringify({ name: "fixture", metadata: { version: "1.2.3" }, plugins: [{ name: "fixture", source: "./", skills: ["./skills/fixture-skill"] }] }),
+      "utf8",
+    );
+    writeFileSync(join(skillDir, "SKILL.md"), skillBody("fixture-skill", { extraFrontmatter: 'metadata:\n  version: "1.0.0"\n' }), "utf8");
+    const { status, output } = runValidator(root);
+    check("marketplace/skill version drift fails", status === 1 && /bump both together/.test(output), `exit ${status}`);
+  }
+
+  // 21. A skill that carries no version at all cannot be checked, so the check must say so
+  // rather than pass vacuously.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root);
+    writeFileSync(
+      join(root, ".claude-plugin", "marketplace.json"),
+      JSON.stringify({ name: "fixture", metadata: { version: "1.2.3" }, plugins: [{ name: "fixture", source: "./", skills: ["./skills/fixture-skill"] }] }),
+      "utf8",
+    );
+    const { status, output } = runValidator(root);
+    check("skill without metadata.version fails", status === 1 && /no metadata\.version/.test(output), `exit ${status}`);
+  }
 } finally {
   rmSync(sandbox, { recursive: true, force: true });
 }

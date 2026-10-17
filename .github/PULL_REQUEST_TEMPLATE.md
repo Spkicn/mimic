@@ -14,7 +14,9 @@
 - [ ] `node scripts/validate.test.mjs` passes
 - [ ] `node scripts/eval-routing.mjs` and `node scripts/eval-routing.test.mjs` pass
 - [ ] `node scripts/probe.test.mjs` passes
+- [ ] `claude plugin validate .` passes (CI runs it)
 - [ ] `SKILL.md` is still between 25 and 150 lines
 - [ ] New rules name the case that required them
 - [ ] `README.md` and `README.zh.md` still agree (the validator checks their structure)
+- [ ] The skill version and the marketplace version are equal, and `CHANGELOG.md` names the change
 - [ ] Any claim about another repository added to the docs was fetched, not recalled

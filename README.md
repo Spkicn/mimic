@@ -124,12 +124,13 @@ skills/mimic/
   evals/evals.json              # Tier 2 cases: trigger, near-miss negative, quality
 AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it
 CONTRIBUTING.md                 # how to contribute, and what makes a useful report
-scripts/validate.mjs            # Tier 1 self-check: frontmatter, host length limits, 25-150 band, routing, evals, links, README sync
+CHANGELOG.md                    # one version, what changed, and the two files that store it
+scripts/validate.mjs            # Tier 1 self-check: frontmatter, host length limits, 25-150 band, routing, evals, links, README sync, version sync
 scripts/validate.test.mjs       # offline fixtures, one per rule the validator enforces
 scripts/eval-routing.mjs        # Tier 2: does the description actually route here (BM25 over sibling descriptions)
 scripts/eval-routing.test.mjs   # sibling-catalog fixtures for the routing scorer
 scripts/probe.test.mjs          # offline fixtures for the probe: auth, cache, truncation, exit codes
-.github/workflows/ci.yml        # every check, fixture suite, and installer smoke test (Linux + Windows)
+.github/workflows/ci.yml        # every check, fixture suite, installer smoke test (Linux + Windows), plugin validate
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code plugin manifest
 install.ps1 / install.sh        # DSH / Claude / project-local installers
@@ -177,12 +178,15 @@ node scripts/validate.test.mjs
 node scripts/eval-routing.mjs
 node scripts/eval-routing.test.mjs
 node scripts/probe.test.mjs
+claude plugin validate .   # needs the Claude Code CLI; CI runs it too
 ```
 
 Keep `SKILL.md` between 25 and 150 lines and put detail in `reference/`; that is this repo's
 own convention, and the validator enforces both ends of it. The two READMEs are checked for
-structural drift, so update `README.md` and `README.zh.md` together. Agent-facing rules live
-in [AGENTS.md](AGENTS.md).
+structural drift, so update `README.md` and `README.zh.md` together. The version lives in two
+files — `skills/mimic/SKILL.md` and `.claude-plugin/marketplace.json` — and the validator fails
+when they differ; a release also gets a `CHANGELOG.md` entry. Agent-facing rules live in
+[AGENTS.md](AGENTS.md).
 
 ## Licence
 

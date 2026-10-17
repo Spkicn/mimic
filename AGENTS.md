@@ -39,6 +39,9 @@ Every command below is verified to run from the repository root.
   `node skills/mimic/scripts/mimic-probe.mjs sindresorhus/got --max-chars 400`
 - **Install locally:** `./install.ps1` (Windows) or `./install.sh` (POSIX); add `-List` /
   `--list` for a dry run, `-Force` / `--force` to overwrite, and `-Help` / `--help` for usage.
+- **Validate the plugin as a host sees it:** `claude plugin validate .` (needs the Claude Code
+  CLI). The validator proves the manifest parses and its paths resolve; only the host's own
+  CLI proves the marketplace is installable. CI runs this in the `plugin` job.
 
 There is no build step and no dependency install. Both scripts are stdlib-only Node 18+;
 `mimic-probe.mjs` needs network access, takes `GITHUB_TOKEN` or falls back to
@@ -75,6 +78,10 @@ partial fetch.
   paths, or the repository structure means changing both. The validator compares their
   heading outline, code-fence count, and table-row count, so drift fails the gate instead of
   waiting for a reviewer to notice.
+- **One version, stored twice.** `skills/mimic/SKILL.md` (`metadata.version`) and
+  `.claude-plugin/marketplace.json` (`metadata.version`) must be equal; the validator fails
+  when they differ or when a declared skill has no version. A release also records its
+  changes in `CHANGELOG.md`.
 
 ## Where things are
 
@@ -82,6 +89,9 @@ partial fetch.
 - The rulebook: `skills/mimic/reference/` — start with `selecting-repos.md` and `evidence.md`
 - The fetcher: `skills/mimic/scripts/mimic-probe.mjs`
 - The checks: `scripts/` — validator, routing scorer, and one fixture suite per tool
+- Release notes: `CHANGELOG.md`; the version lives in the skill frontmatter and the
+  marketplace manifest, and the validator keeps them equal
 - CI: `.github/workflows/ci.yml` — Linux runs every check, the three fixture suites, and the
-  parse checks; a Windows job parse-checks and smoke-tests `install.ps1`
+  parse checks; a Windows job parse-checks and smoke-tests `install.ps1`; a `plugin` job runs
+  `claude plugin validate .` against the real CLI
 - Contribution rules: `CONTRIBUTING.md`

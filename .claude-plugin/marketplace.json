@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Research-first skill for imitating the conventions of comparable open-source projects",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {

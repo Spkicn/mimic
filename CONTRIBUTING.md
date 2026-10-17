@@ -11,7 +11,8 @@ gets better, and it is the reason the repository exists.
 1. Run the whole gate locally:
    `node scripts/validate.mjs`, `node scripts/validate.test.mjs`, `node scripts/eval-routing.mjs`,
    `node scripts/eval-routing.test.mjs`, and `node scripts/probe.test.mjs`. CI runs all of them
-   on Linux, plus installer smoke tests on Linux and Windows.
+   on Linux, plus installer smoke tests on Linux and Windows, and `claude plugin validate .`
+   in the `plugin` job.
 2. If you added a rule to the validator, add the fixture that makes it fire — a rule with no
    failing fixture is a rule nobody has seen work. The same goes for the routing scorer and
    the probe: their failure modes are invisible until a fixture reproduces one.
@@ -19,6 +20,10 @@ gets better, and it is the reason the repository exists.
 4. If you changed the mode table, the install paths, or the repository structure, update
    both `README.md` and `README.zh.md`. The validator compares their structure and fails on
    drift, so this is not left to review.
+5. If you are releasing, bump the version in both places it is stored —
+   `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
+   (`metadata.version`) — and add a `CHANGELOG.md` entry. The validator fails when the two
+   versions differ, so a forgotten bump surfaces before review rather than after install.
 
 ## Changing a rule
 

@@ -201,16 +201,38 @@ if (readmePresent.length > 0) {
   }
 }
 
+// The marketplace version and every declared skill's `metadata.version` are two copies of
+// one fact, edited by hand in two files. They drift the first time someone bumps one and
+// forgets the other, and a host that shows the plugin version then disagrees with the skill
+// it loads. Comparable repositories keep these in sync with a script; a validator rule is
+// the same check without the extra toolchain.
 const manifestPath = join(ROOT, ".claude-plugin", "marketplace.json");
 try {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const manifestVersion = typeof manifest.metadata?.version === "string" ? manifest.metadata.version : null;
   let declared = 0;
+  let versionChecked = 0;
   for (const plugin of manifest.plugins ?? []) {
     for (const skillPath of plugin.skills ?? []) {
       declared++;
-      if (!existsSync(join(ROOT, skillPath, "SKILL.md"))) fail(`marketplace.json: skill path missing: ${skillPath}`);
+      const skillFile = join(ROOT, skillPath, "SKILL.md");
+      if (!existsSync(skillFile)) {
+        fail(`marketplace.json: skill path missing: ${skillPath}`);
+        continue;
+      }
+      if (!manifestVersion) continue;
+      const frontmatter = readFileSync(skillFile, "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)?.[1] ?? "";
+      const skillVersion = frontmatter.match(/^\s+version:\s*["']?([^"'\s]+)/m)?.[1] ?? null;
+      if (!skillVersion) {
+        fail(`marketplace.json: ${skillPath} declares no metadata.version; the shared version cannot be kept in sync`);
+      } else if (skillVersion !== manifestVersion) {
+        fail(`marketplace.json: version ${manifestVersion} but ${skillPath} is ${skillVersion}; bump both together`);
+      } else {
+        versionChecked++;
+      }
     }
   }
+  if (manifestVersion) ok(`marketplace.json version ${manifestVersion} matches ${versionChecked} declared skill(s)`);
   ok(`marketplace.json parses, ${declared} skill path(s) declared`);
 } catch (error) {
   fail(`marketplace.json: ${error.message}`);

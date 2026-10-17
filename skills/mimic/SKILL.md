@@ -3,7 +3,7 @@ name: mimic
 description: Use when an artifact or an implementation should follow the conventions proven by excellent open-source projects rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "what stack do similar projects use", "make our README look professional", "how should we organise this repo". Four modes - stack selection, implementation shape (module boundaries, data model, error strategy, extension points), written artifacts (README/CONTRIBUTING/docs), and repository conventions (layout, commits, CI, lint, AGENTS.md). Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
   author: mimic
 ---
 

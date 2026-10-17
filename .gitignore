@@ -9,3 +9,6 @@ Thumbs.db
 
 # Node (only used if you run ad-hoc tooling)
 node_modules/
+
+# Editor tool lock files that appear during atomic writes
+.dsh-ops-update-*.lock
