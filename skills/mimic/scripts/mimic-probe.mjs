@@ -2,24 +2,30 @@
 /**
  * mimic-probe — fetch what a repository actually says, so the skill never has to guess.
  *
- * Fetches, per repository: metadata (stars, licence, archived, last push), README,
- * root tree, and dependency manifests. Caches every response under .mimic-cache/ and
- * prints bounded, plain-text output. No dependencies, Node 18+.
+ * Fetches, per repository: metadata (stars, licence, archived, last push, commit SHA),
+ * README, root tree, dependency manifests, and any extra files requested with --paths.
+ * Caches successful responses under .mimic-cache/ and prints bounded output. Cache writes
+ * are best-effort: a read-only checkout never turns a good fetch into a failed run.
+ * No dependencies, Node 18+.
  *
  *   node mimic-probe.mjs vercel/next.js sindresorhus/got
  *   node mimic-probe.mjs --search "rate limiter" --language python
+ *   node mimic-probe.mjs --search "motion" --topic remotion
  *   node mimic-probe.mjs --json owner/repo
  *   node mimic-probe.mjs owner/repo --max-chars 4000
+ *   node mimic-probe.mjs owner/repo --paths CONTRIBUTING.md,.github/PULL_REQUEST_TEMPLATE.md
  *
  * Env:
  *   GITHUB_TOKEN   raises the API rate limit. When it is unset the script falls back to
- *                  `gh auth token`, so an environment already logged in with the GitHub
- *                  CLI works without exporting anything.
+ *                  `gh auth token`; an invalid token is retried unauthenticated once instead
+ *                  of failing every request.
  *   MIMIC_CACHE    cache directory (default: ./.mimic-cache)
  *   MIMIC_TIMEOUT_MS  per-request timeout (default: 30000)
+ *   MIMIC_API      API base (default: https://api.github.com; used by the test suite)
  *
  * Exit codes: 0 clean, 2 usage error, 3 a repository failed, 4 completed with degraded data
- * (a repository's recursive tree was unavailable; its metadata and README are still shown).
+ * (README, tree, manifest, commit, or an extra file could not be fetched; everything else is
+ * still shown). Never 0 after a failed lookup.
  */
 
 import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
@@ -29,7 +35,8 @@ import { execFileSync } from "node:child_process";
 const CACHE_DIR = process.env.MIMIC_CACHE || ".mimic-cache";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = Number(process.env.MIMIC_TIMEOUT_MS) || 30000;
-const API = "https://api.github.com";
+const API = (process.env.MIMIC_API || "https://api.github.com").replace(/\/+$/, "");
+const MANIFEST_MAX_CHARS = 2000;
 
 const MANIFESTS = [
   "package.json", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml",
@@ -37,17 +44,66 @@ const MANIFESTS = [
   "Dockerfile", "Makefile", "tsconfig.json",
 ];
 
+const USAGE = `usage: node mimic-probe.mjs [options] <owner/repo> [...]
+
+  --json                 machine-readable output (README clipped to --max-chars)
+  --max-chars N          README characters to print (default 1200, must be > 0)
+  --paths A,B            extra repository files to fetch (CONTRIBUTING.md, .github/...);
+                         at most 8, each clipped to --max-chars
+  --no-cache             bypass both cache reads and writes for this run
+  --search "<query>"     list comparable repositories instead of probing one
+  --language <lang>      with --search: restrict to a language
+  --topic <topic>        with --search: restrict to a GitHub topic
+  -h, --help             show this message
+
+exit codes: 0 clean, 2 usage error, 3 failed, 4 degraded (partial evidence)`;
+
+function fail(message) {
+  console.error(`mimic-probe: ${message}`);
+  process.exit(2);
+}
+
+function positiveInt(raw, flag) {
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) fail(`${flag} expects a positive integer, got "${raw}"`);
+  return value;
+}
+
+function parsePaths(raw) {
+  const paths = String(raw).split(",").map((p) => p.trim()).filter(Boolean);
+  if (paths.length > 8) fail("--paths accepts at most 8 files");
+  for (const p of paths) {
+    if (p.startsWith("/") || p.includes("..") || p.includes("\\")) fail(`invalid --paths entry "${p}"`);
+  }
+  return paths;
+}
+
 function parseArgs(argv) {
-  const opts = { repos: [], search: null, language: null, json: false, maxChars: 1200 };
+  const opts = {
+    repos: [], search: null, language: null, topic: null, json: false,
+    maxChars: 1200, paths: [], noCache: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--json") opts.json = true;
-    else if (a === "--search") opts.search = argv[++i];
-    else if (a === "--language") opts.language = argv[++i];
-    else if (a === "--max-chars") opts.maxChars = Number(argv[++i]) || 1200;
-    else if (a.startsWith("--")) { console.error(`mimic-probe: unknown option ${a}`); process.exit(2); }
-    else opts.repos.push(a);
+    else if (a === "--no-cache") opts.noCache = true;
+    else if (a === "-h" || a === "--help") { console.log(USAGE); process.exit(0); }
+    else if (a === "--search" || a === "--language" || a === "--topic" || a === "--max-chars" || a === "--paths") {
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith("--")) fail(`${a} requires a value`);
+      i += 1;
+      if (a === "--search") opts.search = value;
+      else if (a === "--language") opts.language = value;
+      else if (a === "--topic") opts.topic = value;
+      else if (a === "--paths") opts.paths = parsePaths(value);
+      else opts.maxChars = positiveInt(value, a);
+    } else if (a.startsWith("--")) {
+      fail(`unknown option ${a}`);
+    } else {
+      opts.repos.push(a);
+    }
   }
+  if (opts.search && opts.repos.length) fail("--search and <owner/repo> cannot be combined");
   return opts;
 }
 
@@ -75,9 +131,9 @@ function githubToken() {
   return tokenValue;
 }
 
-function headers(accept = "application/vnd.github+json") {
+function headers(accept = "application/vnd.github+json", withToken = true) {
   const h = { "User-Agent": "mimic-skill", Accept: accept, "X-GitHub-Api-Version": "2022-11-28" };
-  const token = githubToken();
+  const token = withToken ? githubToken() : null;
   if (token) h.Authorization = `Bearer ${token}`;
   return h;
 }
@@ -96,23 +152,11 @@ function signalAborted(error) {
   return false;
 }
 
-async function cached(key, url, { raw = false, timeoutMs = FETCH_TIMEOUT_MS } = {}) {
-  const file = join(CACHE_DIR, key.replace(/[^a-zA-Z0-9._-]/g, "_") + ".json");
-  try {
-    const info = await stat(file);
-    if (Date.now() - info.mtimeMs < CACHE_TTL_MS) {
-      const hit = JSON.parse(await readFile(file, "utf8"));
-      if (hit.url === url) return { data: hit.data, cache: "hit" };
-    }
-  } catch { /* cache miss */ }
-
+async function fetchOnce(url, accept, withToken, timeoutMs) {
   let res;
   try {
-    // Ask for the raw body directly; fall back to decoding the base64 contents payload.
-    // The timeout matters: a very large repository's recursive tree can otherwise hold the
-    // whole run open indefinitely.
     res = await fetch(url, {
-      headers: headers(raw ? "application/vnd.github.raw" : undefined),
+      headers: headers(accept, withToken),
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
@@ -121,16 +165,13 @@ async function cached(key, url, { raw = false, timeoutMs = FETCH_TIMEOUT_MS } = 
     }
     throw new Error(`network unreachable for ${url}: ${error.message}`);
   }
-  if (res.status === 404) return { data: null, cache: "404" };
-  if (res.status === 403 || res.status === 429) {
-    throw new Error(`rate limited by GitHub (HTTP ${res.status}) on ${url}. Set GITHUB_TOKEN.`);
-  }
-  if (!res.ok) return { data: null, cache: `HTTP ${res.status}` };
+  return res;
+}
 
+async function readBody(res, url, raw, timeoutMs) {
   // Reading the body belongs inside the timeout guard too: fetch resolves once the headers
   // arrive, so a large response can still be streaming when the signal fires, and an
   // unguarded res.text() then throws an unwrapped abort instead of a usable message.
-  let data;
   try {
     if (raw) {
       const text = await res.text();
@@ -138,53 +179,129 @@ async function cached(key, url, { raw = false, timeoutMs = FETCH_TIMEOUT_MS } = 
       if (type.includes("json")) {
         let payload = null;
         try { payload = JSON.parse(text); } catch { payload = null; }
-        data = typeof payload?.content === "string"
+        return typeof payload?.content === "string"
           ? Buffer.from(payload.content, "base64").toString("utf8")
           : null;
-      } else {
-        data = text;
       }
-    } else {
-      data = await res.json();
+      return text;
     }
+    return await res.json();
   } catch (error) {
     if (signalAborted(error)) {
       throw new Error(`timed out after ${timeoutMs}ms reading the body of ${url} (raise MIMIC_TIMEOUT_MS)`);
     }
     throw new Error(`unreadable response body from ${url}: ${error.message}`);
   }
-
-  await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, JSON.stringify({ url, fetchedAt: new Date().toISOString(), data }), "utf8");
-  return { data, cache: "miss" };
 }
 
-async function probeRepo(slug) {
-  if (!/^[\w.-]+\/[\w.-]+$/.test(slug)) throw new Error(`not an owner/repo slug: ${slug}`);
-  const [owner, name] = slug.split("/");
+/**
+ * Fetch one URL through the cache.
+ *
+ * 404 is the only status that means "this resource does not exist"; every other non-OK
+ * status throws, so a 5xx or a rejected token can never be mistaken for a missing README.
+ * A 401 with a token configured is retried once without credentials, which makes a stale
+ * `gh auth token` harmless for public repositories.
+ *
+ * Cache writes are best-effort. A read-only checkout is a normal working state, not a
+ * reason to discard a successful fetch.
+ *
+ * @returns {{data: any, status: number, cache: "hit"|"miss"|"404", fetchedAt: string}}
+ */
+async function cached(key, url, { raw = false, timeoutMs = FETCH_TIMEOUT_MS, bypass = false } = {}) {
+  const file = join(CACHE_DIR, key.replace(/[^a-zA-Z0-9._-]/g, "_") + ".json");
+
+  if (!bypass) {
+    try {
+      const info = await stat(file);
+      if (Date.now() - info.mtimeMs < CACHE_TTL_MS) {
+        const hit = JSON.parse(await readFile(file, "utf8"));
+        if (hit.url === url) {
+          return { data: hit.data, status: 200, cache: "hit", fetchedAt: hit.fetchedAt };
+        }
+      }
+    } catch { /* cache miss */ }
+  }
+
+  let res = await fetchOnce(url, raw ? "application/vnd.github.raw" : undefined, true, timeoutMs);
+  if (res.status === 401 && githubToken()) {
+    res = await fetchOnce(url, raw ? "application/vnd.github.raw" : undefined, false, timeoutMs);
+    if (res.status === 401) {
+      throw new Error(`HTTP 401 from GitHub: the configured GITHUB_TOKEN / gh token was rejected. Run \`gh auth login\` or unset the token. (${url})`);
+    }
+  }
+
+  if (res.status === 404) return { data: null, status: 404, cache: "404", fetchedAt: null };
+  if (res.status === 401) {
+    throw new Error(`HTTP 401 from GitHub: authentication rejected. Set GITHUB_TOKEN or run \`gh auth login\`. (${url})`);
+  }
+  if (res.status === 403 || res.status === 429) {
+    const retryAfter = res.headers.get("retry-after");
+    const hint = retryAfter ? ` Retry after ${retryAfter}s.` : "";
+    throw new Error(`rate limited by GitHub (HTTP ${res.status}) on ${url}. Set GITHUB_TOKEN.${hint}`);
+  }
+  if (!res.ok) {
+    throw new Error(`GitHub API HTTP ${res.status} on ${url}`);
+  }
+
+  const data = await readBody(res, url, raw, timeoutMs);
+  const fetchedAt = new Date().toISOString();
+
+  if (!bypass) {
+    try {
+      await mkdir(dirname(file), { recursive: true });
+      await writeFile(file, JSON.stringify({ url, fetchedAt, data }), "utf8");
+    } catch { /* cache is an optimization; never fail a good fetch because of it */ }
+  }
+  return { data, status: 200, cache: "miss", fetchedAt };
+}
+
+function parseSlug(slug) {
+  const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(slug);
+  if (!match) throw new Error(`not an owner/repo slug: ${slug}`);
+  const [, owner, name] = match;
+  if (owner === "." || owner === ".." || name === "." || name === "..") {
+    throw new Error(`not an owner/repo slug: ${slug}`);
+  }
+  return { owner, name };
+}
+
+async function probeRepo(slug, opts) {
+  const { owner, name } = parseSlug(slug);
   const root = `${API}/repos/${owner}/${name}`;
+  const notes = [];
 
-  const meta = (await cached(`repo_${owner}_${name}`, root)).data;
-  if (!meta) return { slug, error: "repository not found (or private)" };
+  const metaHit = await cached(`repo_${owner}_${name}`, root, { bypass: opts.noCache });
+  const meta = metaHit.data;
+  if (!meta) return { slug, error: "repository not found (or private; HTTP 404)" };
 
-  const readmeRaw = (await cached(`readme_${owner}_${name}`, `${root}/readme`, { raw: true })).data;
+  let commit = null;
+  try {
+    const branch = meta.default_branch;
+    const commitHit = await cached(`commit_${owner}_${name}_${branch}`, `${root}/commits/${encodeURIComponent(branch)}`, { bypass: opts.noCache });
+    commit = commitHit.data?.sha ?? null;
+    if (!commit) notes.push("commit SHA unavailable");
+  } catch (error) {
+    notes.push(`commit SHA unavailable: ${error.message}`);
+  }
 
-  // One recursive tree call lists every path, so the manifests that exist can be fetched
-  // directly instead of probing for the twelve that usually do not. The blind probe cost
-  // up to twelve requests per repository and is what pushed a run into the rate limit.
+  let readme = null;
+  try {
+    const readmeHit = await cached(`readme_${owner}_${name}`, `${root}/readme`, { raw: true, bypass: opts.noCache });
+    readme = typeof readmeHit.data === "string" ? readmeHit.data : null;
+  } catch (error) {
+    notes.push(`README unavailable: ${error.message}`);
+  }
+
   const branch = meta.default_branch;
   let entries = [];
   let treeTruncated = false;
-  let treeNote = null;
 
   try {
-    const tree = (await cached(`tree_${owner}_${name}_${branch}`, `${root}/git/trees/${encodeURIComponent(branch)}?recursive=1`)).data;
-    entries = Array.isArray(tree?.tree) ? tree.tree : [];
-    treeTruncated = tree?.truncated === true;
+    const treeHit = await cached(`tree_${owner}_${name}_${branch}`, `${root}/git/trees/${encodeURIComponent(branch)}?recursive=1`, { bypass: opts.noCache });
+    entries = Array.isArray(treeHit.data?.tree) ? treeHit.data.tree : [];
+    treeTruncated = treeHit.data?.truncated === true;
   } catch (error) {
-    // The tree is an index, not the answer. Losing it must not lose the metadata and README
-    // that already succeeded, so record the reason and degrade to the contents listing.
-    treeNote = `recursive tree unavailable: ${error.message}`;
+    notes.push(`recursive tree unavailable: ${error.message}`);
   }
 
   let rootEntries = [];
@@ -201,20 +318,40 @@ async function probeRepo(slug) {
     // Very large repositories truncate the tree response; fall back to the contents listing
     // so root entries and manifests stay correct rather than silently empty.
     try {
-      const listing = (await cached(`contents_${owner}_${name}`, `${root}/contents/`)).data;
-      rootEntries = Array.isArray(listing)
-        ? listing.map((e) => `${e.name}${e.type === "dir" ? "/" : ""}`).sort()
+      const listingHit = await cached(`contents_${owner}_${name}`, `${root}/contents/`, { bypass: opts.noCache });
+      rootEntries = Array.isArray(listingHit.data)
+        ? listingHit.data.map((e) => `${e.name}${e.type === "dir" ? "/" : ""}`).sort()
         : [];
     } catch (error) {
-      treeNote ??= `contents listing unavailable: ${error.message}`;
+      notes.push(`contents listing unavailable: ${error.message}`);
     }
     present = MANIFESTS.filter((m) => rootEntries.includes(m));
+    if (treeTruncated) notes.push("recursive tree truncated; root listing from contents");
   }
 
   const manifests = {};
+  const manifestNotes = {};
   for (const m of present) {
-    const hit = await cached(`file_${owner}_${name}_${m}`, `${root}/contents/${m}`, { raw: true });
-    if (hit.data) manifests[m] = String(hit.data).slice(0, 2000);
+    try {
+      const hit = await cached(`file_${owner}_${name}_${m}`, `${root}/contents/${m}`, { raw: true, bypass: opts.noCache });
+      if (hit.data !== null) manifests[m] = String(hit.data);
+    } catch (error) {
+      manifestNotes[m] = error.message;
+      notes.push(`manifest ${m} unavailable: ${error.message}`);
+    }
+  }
+
+  const files = {};
+  const fileNotes = {};
+  for (const path of opts.paths) {
+    try {
+      const hit = await cached(`path_${owner}_${name}_${path.replace(/[^a-zA-Z0-9._-]/g, "_")}`, `${root}/contents/${encodeURI(path)}`, { raw: true, bypass: opts.noCache });
+      if (hit.data !== null) files[path] = String(hit.data);
+      else fileNotes[path] = "not found";
+    } catch (error) {
+      fileNotes[path] = error.message;
+      notes.push(`file ${path} unavailable: ${error.message}`);
+    }
   }
 
   return {
@@ -233,13 +370,34 @@ async function probeRepo(slug) {
     openIssues: meta.open_issues_count,
     defaultBranch: meta.default_branch,
     homepage: meta.homepage || null,
-    readme: typeof readmeRaw === "string" ? readmeRaw : null,
+    commit,
+    fetchedAt: metaHit.fetchedAt,
+    cache: metaHit.cache,
+    readme,
     rootEntries,
     fileCount,
     treeTruncated,
-    treeNote,
     manifests,
+    manifestNotes,
+    files,
+    fileNotes,
+    notes,
   };
+}
+
+function clip(text, maxChars) {
+  const body = String(text).replace(/\r/g, "");
+  return {
+    body: body.slice(0, maxChars),
+    total: body.length,
+    truncated: body.length > maxChars,
+  };
+}
+
+function renderFileBlock(label, raw, maxChars) {
+  const { body, total, truncated } = clip(raw, maxChars);
+  const marker = truncated ? ` (showing ${maxChars} of ${total} chars)` : ` (${total} chars)`;
+  return `   --- ${label}${marker} ---\n${body.split("\n").map((l) => `   | ${l}`).join("\n")}`;
 }
 
 function render(repo, maxChars) {
@@ -247,89 +405,124 @@ function render(repo, maxChars) {
   L.push(`## ${repo.fullName}  ${repo.url}`);
   L.push(`   ${repo.description ?? "(no description)"}`);
   L.push(`   stars ${repo.stars} | forks ${repo.forks} | language ${repo.language ?? "?"} | licence ${repo.license ?? "NONE — all rights reserved"}`);
-  L.push(`   pushed ${repo.pushedAt} | created ${repo.createdAt} | archived ${repo.archived} | open issues ${repo.openIssues}`);
+  L.push(`   pushed ${repo.pushedAt} | created ${repo.createdAt} | archived ${repo.archived} | open issues+PRs ${repo.openIssues}`);
+  L.push(`   commit ${repo.commit ?? "(unavailable)"} | fetched ${repo.fetchedAt ?? "(unknown)"} (cache ${repo.cache})`);
   if (repo.topics.length) L.push(`   topics: ${repo.topics.join(", ")}`);
   L.push(`   root: ${repo.rootEntries.join("  ") || "(empty)"}`);
   if (repo.fileCount !== null && repo.fileCount !== undefined) {
-    L.push(`   files tracked: ${repo.fileCount}${repo.treeTruncated ? " (tree truncated)" : ""}`);
+    L.push(`   files tracked: ${repo.fileCount}`);
+  } else {
+    L.push("   files tracked: (unknown)");
   }
-  if (repo.treeNote) L.push(`   partial: ${repo.treeNote}`);
+  for (const note of repo.notes) L.push(`   partial: ${note}`);
 
   const names = Object.keys(repo.manifests);
-  if (names.length) {
-    L.push(`   manifests found: ${names.join(", ")}`);
-    for (const [m, body] of Object.entries(repo.manifests)) {
-      if (m !== "package.json" && m !== "pyproject.toml" && m !== "go.mod" && m !== "Cargo.toml") continue;
-      L.push(`   --- ${m} ---`);
-      L.push(body.split("\n").slice(0, 45).map((l) => `   | ${l}`).join("\n"));
-    }
-  } else {
-    L.push("   manifests found: none");
+  L.push(`   manifests found: ${names.length ? names.join(", ") : "none"}`);
+  for (const [m, body] of Object.entries(repo.manifests)) {
+    L.push(renderFileBlock(m, body, MANIFEST_MAX_CHARS));
+  }
+  for (const [path, body] of Object.entries(repo.files)) {
+    L.push(renderFileBlock(path, body, maxChars));
+  }
+  for (const [path, note] of Object.entries(repo.fileNotes)) {
+    L.push(`   --- ${path}: ${note} ---`);
   }
 
   if (repo.readme) {
-    const body = repo.readme.replace(/\r/g, "");
-    L.push(`   --- README (${body.length} chars, showing ${Math.min(maxChars, body.length)}) ---`);
-    L.push(body.slice(0, maxChars).split("\n").map((l) => `   | ${l}`).join("\n"));
+    L.push(renderFileBlock("README", repo.readme, maxChars));
   } else {
-    L.push("   --- README: not found ---");
+    const note = repo.notes.find((n) => n.startsWith("README unavailable"));
+    L.push(`   --- README: ${note ? note.replace("README unavailable: ", "unavailable — ") : "not found"} ---`);
   }
   return L.join("\n");
+}
+
+async function searchRepos(opts) {
+  let q = opts.search;
+  if (opts.language) q += ` language:${opts.language}`;
+  if (opts.topic) q += ` topic:${opts.topic}`;
+  const url = `${API}/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=10`;
+  const { data, fetchedAt, cache } = await cached(`search_${q}`, url, { bypass: opts.noCache });
+  if (!data) throw new Error("search returned no data");
+  const rows = (data.items ?? []).map((r) => ({
+    full_name: r.full_name, stars: r.stargazers_count,
+    licence: r.license?.spdx_id ?? "NONE", pushed: (r.pushed_at ?? "").slice(0, 10),
+    archived: r.archived, description: r.description,
+  }));
+  if (opts.json) {
+    console.log(JSON.stringify({ fetchedAt, cache, incomplete: data.incomplete_results === true, rows }, null, 2));
+    return;
+  }
+  console.log(`Candidates for "${opts.search}" — comparability is yours to judge, popularity is not evidence:\n`);
+  for (const r of rows) {
+    console.log(`${r.full_name.padEnd(38)} ${String(r.stars).padStart(7)}★  ${r.licence.padEnd(12)} ${r.pushed}${r.archived ? "  ARCHIVED" : ""}`);
+    console.log(`  ${r.description ?? ""}`);
+  }
+  if (data.incomplete_results === true) console.log("\nWarning: GitHub marked this search as incomplete.");
+  console.log(`\nFetched ${fetchedAt} (cache ${cache}) — record this timestamp as your evidence date.`);
+  console.log(`Filter with reference/selecting-repos.md before reading any of them.`);
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
 
   if (opts.search) {
-    const q = encodeURIComponent(`${opts.search}${opts.language ? ` language:${opts.language}` : ""}`);
-    const url = `${API}/search/repositories?q=${q}&sort=stars&order=desc&per_page=10`;
-    const { data } = await cached(`search_${q}`, url);
-    if (!data) { console.error("mimic-probe: search failed"); process.exit(3); }
-    const rows = (data.items ?? []).map((r) => ({
-      full_name: r.full_name, stars: r.stargazers_count,
-      licence: r.license?.spdx_id ?? "NONE", pushed: (r.pushed_at ?? "").slice(0, 10),
-      archived: r.archived, description: r.description,
-    }));
-    if (opts.json) { console.log(JSON.stringify(rows, null, 2)); return; }
-    console.log(`Candidates for "${opts.search}" — comparability is yours to judge, popularity is not evidence:\n`);
-    for (const r of rows) {
-      console.log(`${r.full_name.padEnd(38)} ${String(r.stars).padStart(7)}★  ${r.licence.padEnd(12)} ${r.pushed}${r.archived ? "  ARCHIVED" : ""}`);
-      console.log(`  ${r.description ?? ""}`);
-    }
-    console.log(`\nFilter with reference/selecting-repos.md before reading any of them.`);
+    await searchRepos(opts);
     return;
   }
 
-  if (!opts.repos.length) {
-    console.error("usage: node mimic-probe.mjs [--json] [--max-chars N] <owner/repo> [...]");
-    console.error("       node mimic-probe.mjs --search \"<query>\" [--language <lang>]");
-    process.exit(2);
-  }
-
-  const results = [];
+  if (!opts.repos.length) fail("no repositories given\n" + USAGE);
   for (const slug of opts.repos) {
     try {
-      results.push(await probeRepo(slug));
+      parseSlug(slug);
     } catch (error) {
-      console.error(`mimic-probe: ${slug}: ${error.message}`);
-      process.exitCode = 3;
+      fail(error.message);
     }
   }
 
-  // A repository that resolves to "not found" returns rather than throws, so it has to be
-  // counted here too. Exiting 0 after a failed lookup would report a partial run as clean.
-  if (results.some((r) => r.error)) process.exitCode = 3;
-  else if (results.some((r) => r.treeNote)) process.exitCode = 4;
+  const results = [];
+  let failed = false;
+  let degraded = false;
+  for (const slug of opts.repos) {
+    try {
+      const repo = await probeRepo(slug, opts);
+      results.push(repo);
+      if (repo.error) failed = true;
+      else if (repo.notes.length) degraded = true;
+    } catch (error) {
+      console.error(`mimic-probe: ${slug}: ${error.message}`);
+      results.push({ slug, error: error.message });
+      failed = true;
+    }
+  }
 
-  if (opts.json) { console.log(JSON.stringify(results, null, 2)); return; }
+  if (failed) process.exitCode = 3;
+  else if (degraded) process.exitCode = 4;
+
+  if (opts.json) {
+    const bounded = results.map((r) => {
+      if (r.error) return r;
+      const readmeLength = r.readme ? r.readme.length : 0;
+      return {
+        ...r,
+        readme: r.readme ? r.readme.slice(0, opts.maxChars) : null,
+        readmeLength,
+        readmeTruncated: readmeLength > opts.maxChars,
+      };
+    });
+    console.log(JSON.stringify(bounded, null, 2));
+    return;
+  }
 
   const parts = results.map((r) => r.error ? `## ${r.slug}\n   ERROR: ${r.error}` : render(r, opts.maxChars));
   console.log(parts.join("\n\n"));
-  console.log(`\nFetched ${new Date().toISOString()} — record this timestamp as your evidence date.`);
+
+  const stamps = [...new Set(results.filter((r) => r.fetchedAt).map((r) => `${r.fetchedAt} (cache ${r.cache})`))];
+  console.log(`\nFetched ${stamps.length ? stamps.join("; ") : new Date().toISOString()} — record this timestamp as your evidence date.`);
   console.log(`Cache: ${CACHE_DIR}/ (24h TTL). Unauthenticated requests are rate limited; set GITHUB_TOKEN.`);
 }
 
 main().catch((error) => {
   console.error(`mimic-probe: ${error.message}`);
-  process.exit(1);
+  process.exit(3);
 });

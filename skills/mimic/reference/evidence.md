@@ -87,17 +87,30 @@ so the reader knows how much weight each project's analysis carries.
 
 ## Fetch discipline
 
-- **Use the helper.** `node scripts/mimic-probe.mjs <owner/repo> [...]` fetches metadata,
-  README, root tree, and manifests, caches them under `.mimic-cache/`, and prints a bounded
-  summary. Prefer it over ad-hoc fetching: it is cached, it truncates, and it never
-  embellishes. Use `--json` when you need the raw shape.
+- **Use the helper.** `node <skill-dir>/scripts/mimic-probe.mjs <owner/repo> [...]` fetches
+  metadata, README, root tree, and manifests, caches them under `.mimic-cache/`, and prints a
+  bounded summary. Resolve `<skill-dir>` rather than guessing: from this repository it is
+  `skills/mimic`, and an installed DSH copy is `~/.dsh/skills/mimic`. Running
+  `node scripts/mimic-probe.mjs` from the user's project only works if the script happens to
+  be there.
+- **Read the exit code before the output.** `0` means a clean fetch, `2` a usage mistake,
+  `3` a repository failed, `4` the tree was degraded but usable. A failure is reported as a
+  failure; it is never evidence that the repository does not exist. If the probe prints an
+  authentication error, the stored token is stale — fix it or run unauthenticated; do not
+  report "repository not found" from it.
 - **Use a token.** The probe reads `GITHUB_TOKEN`, and when that is unset it falls back to
   `gh auth token`, so an environment already logged in with the GitHub CLI needs no export.
   Unauthenticated limits are low enough that a five-repo pass gets throttled mid-research.
+- **Fetch only what the question needs.** `--paths <file...>` pulls one more file (a
+  `CONTRIBUTING.md`, a template, a workflow) without the cost of the whole tree;
+  `--refresh` bypasses the 24-hour cache and `--no-cache` disables it. The probe prints the
+  fetched timestamp, default branch, and commit SHA — record the SHA so a later reader can
+  pin the exact revision you read.
 - **Never fetch the same thing twice.** The cache exists for this; a repeat fetch is a
   signal that the research plan is drifting.
 - **Bounded output.** Truncate READMEs and trees. A 4,000-line README read in full is
-  budget burned for nothing.
+  budget burned for nothing. `--json` is a raw escape hatch and is not truncated; do not
+  paste it into a report.
 - **Quote, then paraphrase.** Keep short quoted fragments as evidence; do not reproduce
   long passages of anyone's prose into your output. See [licensing.md](licensing.md).
 
@@ -107,7 +120,7 @@ For each project, keep a compact record as you go:
 
 ```
 ## <owner/repo> — <why it is comparable>
-E1  fetched 2026-10-06 | stars 4210 | license MIT | pushed 2026-08-14 | not archived
+E1  fetched 2026-10-06 | commit 3f2a91c | stars 4210 | license MIT | pushed 2026-08-14 | not archived
 E2  read: README.md, package.json, root tree, src/index.ts
     - <fact>
     - <fact>

@@ -52,6 +52,7 @@ function makeFixture(root, { skillName = "fixture-skill", evals = evalCases() } 
   mkdirSync(skillDir, { recursive: true });
   mkdirSync(join(root, ".claude-plugin"), { recursive: true });
   writeFileSync(join(root, "README.md"), "# fixture\n", "utf8");
+  writeFileSync(join(root, "README.zh.md"), "# 示例\n", "utf8");
   writeFileSync(
     join(root, ".claude-plugin", "marketplace.json"),
     JSON.stringify({ name: "fixture", plugins: [{ name: "fixture", source: "./", skills: [`./skills/${skillName}`] }] }),
@@ -234,6 +235,43 @@ try {
     makeFixture(root, { evals: "{ not json" });
     const { status, output } = runValidator(root);
     check("unparseable evals fails", status === 1 && /not valid JSON/.test(output), `exit ${status}`);
+  }
+  // 15. A name over the host's 64-char limit may be installed by this repo and rejected by a
+  // parser that follows the Agent Skills spec.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    const longName = `skill-${"a".repeat(60)}`;
+    const skillDir = makeFixture(root, { skillName: longName });
+    writeFileSync(join(skillDir, "SKILL.md"), skillBody(longName), "utf8");
+    const { status, output } = runValidator(root);
+    check("name over the host limit fails", status === 1 && /over the 64-char host limit/.test(output), `exit ${status}`);
+  }
+
+  // 16. Same for a description over the host's 1024-char limit.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    const skillDir = makeFixture(root);
+    writeFileSync(join(skillDir, "SKILL.md"), skillBody("fixture-skill", { description: "x".repeat(1025) }), "utf8");
+    const { status, output } = runValidator(root);
+    check("description over the host limit fails", status === 1 && /over the 1024-char host limit/.test(output), `exit ${status}`);
+  }
+
+  // 17. The English and Chinese READMEs are maintained together or not at all.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root);
+    rmSync(join(root, "README.zh.md"));
+    const { status, output } = runValidator(root);
+    check("a lone README fails", status === 1 && /must ship together/.test(output), `exit ${status}`);
+  }
+
+  // 18. Structural drift: one file gained a section the other did not.
+  {
+    const root = join(sandbox, `case-${++caseIndex}`);
+    makeFixture(root);
+    writeFileSync(join(root, "README.zh.md"), "# 示例\n\n## 新章节\n", "utf8");
+    const { status, output } = runValidator(root);
+    check("README structure drift fails", status === 1 && /heading outlines differ/.test(output), `exit ${status}`);
   }
 } finally {
   rmSync(sandbox, { recursive: true, force: true });

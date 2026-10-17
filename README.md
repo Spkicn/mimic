@@ -31,12 +31,20 @@ evidence and the licence check attached.
 
 **DSH**
 
-```powershell
+```text
 git clone https://github.com/Spkicn/mimic.git
 cd mimic
-./install.ps1                 # -> ~/.dsh/skills
+
+# Windows
+./install.ps1                          # -> ~/.dsh/skills
 ./install.ps1 -Target project-dsh -ProjectPath C:\code\myapp
+
+# macOS / Linux
+./install.sh                           # -> ~/.dsh/skills
+./install.sh --project ~/code/myapp    # -> <project>/.dsh/skills
 ```
+
+Both installers take a dry-run flag (`-List` / `--list`) and a force flag (`-Force` / `--force`).
 
 **Claude Code**
 
@@ -71,6 +79,7 @@ Most "research before you build" prompts stop at a report. `mimic` closes these 
 | **Closure** | The deliverable is a file on disk plus an "adopted / deliberately not adopted / reason" table — not advice in a chat window. In implementation mode the deliverable is the changed source plus its provenance block. |
 | **Constraint test** | A pattern is only adopted if you can name the constraint that forced it *and* show that you share it. Otherwise the machinery is cargo cult, and the finding is that you did not need it. |
 | **Clean room** | Describe the pattern in your own words first, then close the source and implement. This is what makes "never copy code" a procedure instead of a promise. |
+| **Tested router** | The `description` is the router, so the repo scores every eval prompt against every description in a sibling catalog. A prompt that should not route here fails the build, not a review. |
 
 And it has a degraded mode: **no network, no answer.** If GitHub is unreachable the agent
 says so and stops, rather than reconstructing repositories from memory.
@@ -87,11 +96,16 @@ says so and stops, rather than reconstructing repositories from memory.
 # what the agent runs under the hood
 node skills/mimic/scripts/mimic-probe.mjs owner/repo owner/repo2 --max-chars 1200
 node skills/mimic/scripts/mimic-probe.mjs --search "rate limiter" --language python
+node skills/mimic/scripts/mimic-probe.mjs owner/repo --paths .github/PULL_REQUEST_TEMPLATE.md
 ```
 
-The probe prints `stars | licence | pushed_at | archived` plus the README, root tree, and
-dependency manifests — the fields a model is most tempted to invent and most likely to get
-wrong. `GITHUB_TOKEN` raises the rate limit; results are cached under `.mimic-cache/`.
+The probe prints the fetch date, default branch and commit SHA, `stars | licence | pushed_at |
+archived`, plus the README, root tree, and dependency manifests — the fields a model is most
+tempted to invent and most likely to get wrong. It exits `0` clean, `2` on bad usage, `3` when
+a repository failed, and `4` when the tree was degraded but usable; it never exits `0` after a
+partial fetch. A stale token produces an error you can see, not a fake "repository not found".
+`--refresh` ignores the cache and `--no-cache` disables it; `GITHUB_TOKEN` raises the rate
+limit; results are cached under `.mimic-cache/` for 24 hours.
 
 ## Repository structure
 
@@ -110,10 +124,12 @@ skills/mimic/
   evals/evals.json              # Tier 2 cases: trigger, near-miss negative, quality
 AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it
 CONTRIBUTING.md                 # how to contribute, and what makes a useful report
-scripts/validate.mjs            # Tier 1 self-check: frontmatter, single-line description, 25-150 band, routing, evals, links
+scripts/validate.mjs            # Tier 1 self-check: frontmatter, host length limits, 25-150 band, routing, evals, links, README sync
 scripts/validate.test.mjs       # offline fixtures, one per rule the validator enforces
-scripts/eval-routing.mjs        # Tier 2: does the description actually route here
-.github/workflows/ci.yml        # runs the self-check, its tests and the parse checks on every push
+scripts/eval-routing.mjs        # Tier 2: does the description actually route here (BM25 over sibling descriptions)
+scripts/eval-routing.test.mjs   # sibling-catalog fixtures for the routing scorer
+scripts/probe.test.mjs          # offline fixtures for the probe: auth, cache, truncation, exit codes
+.github/workflows/ci.yml        # every check, fixture suite, and installer smoke test (Linux + Windows)
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code plugin manifest
 install.ps1 / install.sh        # DSH / Claude / project-local installers
@@ -128,6 +144,7 @@ install.ps1 / install.sh        # DSH / Claude / project-local installers
 - **Mimic structure, not decoration.** Emoji headings and badge walls are not conventions; section contracts and commitments are.
 - **Write the file.** Advice evaporates; a file in the repo does not.
 - **The artefact's licence is yours, not the source's.** Learn from GPL projects freely — copy nothing.
+- **Test the router, not just the body.** A description nobody scored is a guess; every eval prompt is checked against the descriptions it competes with.
 
 ## Prior art and credit
 
@@ -152,10 +169,20 @@ contribution is a **failure report**: a case where the agent asserted something 
 repository it had not fetched, or adopted a convention that did not fit. Those become hard
 lines in the references.
 
-Run `node scripts/validate.mjs` and `node scripts/validate.test.mjs` before opening a PR —
-CI runs both. Keep `SKILL.md` between 25 and 150 lines and put detail in `reference/`; that
-is this repo's own convention, and the validator enforces both ends of it. Agent-facing
-rules live in [AGENTS.md](AGENTS.md).
+Run the gates before opening a PR — CI runs all of them:
+
+```bash
+node scripts/validate.mjs
+node scripts/validate.test.mjs
+node scripts/eval-routing.mjs
+node scripts/eval-routing.test.mjs
+node scripts/probe.test.mjs
+```
+
+Keep `SKILL.md` between 25 and 150 lines and put detail in `reference/`; that is this repo's
+own convention, and the validator enforces both ends of it. The two READMEs are checked for
+structural drift, so update `README.md` and `README.zh.md` together. Agent-facing rules live
+in [AGENTS.md](AGENTS.md).
 
 ## Licence
 

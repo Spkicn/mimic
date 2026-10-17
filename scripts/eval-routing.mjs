@@ -20,11 +20,20 @@
  * the description, not the eval.
  *
  * Usage:
- *   node scripts/eval-routing.mjs [--catalog <dir>] [--min-rank1 <pct>] [--json]
+ *   node scripts/eval-routing.mjs [--catalog <dir>] [--min-rank1 <pct>] [--explain]
+ *                                 [--json] [--no-match-floor <score>]
+ *
+ * Prompts are scored with BM25 over the catalog descriptions, normalised by the IDF mass of
+ * the prompt's own terms. (An earlier version built the prompt vector from a one-document
+ * corpus, so every prompt term had an IDF of 1 while catalog terms did not; cosine also
+ * shrank as prompts grew. Both errors made genuine prompts lose to siblings that merely
+ * shared generic vocabulary.) The fixtures in `eval-routing.test.mjs` pin the behaviour.
  *
  * The catalog is every skill whose description competes for routing. It defaults to this
  * repository's own `skills/`, which holds one skill; point it at a host skills directory to
- * test against real siblings.
+ * test against real siblings. CI cannot assume such a directory exists, so
+ * `eval-routing.test.mjs` builds throwaway sibling catalogs in the OS temp dir and runs this
+ * script against them; those fixtures are what keep the sibling checks from being vacuous.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -46,21 +55,19 @@ const COLLISION_FAIL = 0.75;
 const COLLISION_WARN = 0.5;
 
 /**
- * Below this best-catalog score, no skill is a meaningful match and the ranking between
- * near-zero scores is noise.
+ * Below this coverage score, no skill is a meaningful match, so a should_not_trigger that
+ * "wins" the route is just the least-unrelated entry and says nothing about the description.
  *
- * Placed from measurement, not from taste. Against the three-skill catalog on this machine
- * (impeccable / mimic / remotion-video), scored with this script:
- *
- *   weakest genuine trigger prompt  0.075   (我要给这个项目加个重试机制…)
- *   "implement a bubble sort…"      0.053   no skill should fire
- *   "there is a typo on line 42"    0.048   no skill should fire
- *   "design a nicer landing page"   0.140   routes to impeccable — a real sibling
- *   "make a 30-second promo video"  0.220   routes to remotion-video — a real sibling
- *
- * 0.06 separates the noise from the real matches. Re-measure with --explain before moving it.
+ * The score is BM25 divided by the IDF mass of the prompt's distinct terms: "what share of
+ * the words this prompt actually used does the description cover, after term saturation and
+ * length normalisation". The scale is not intuitive, so it is calibrated from the fixture
+ * catalog rather than chosen: prompts unrelated to every description (typo fixes, bubble
+ * sort, landing pages) top out around 0.17 even when one shared word such as "implement" is
+ * present. Genuine matches range from ~0.06 for short CJK paraphrases, whose bigrams dilute
+ * the coverage, up to ~1.3 for a near-verbatim English trigger — which is why the floor only
+ * gates the negative check and never the rank-1 check.
  */
-const NO_MATCH_FLOOR = Number(option("--no-match-floor", "0.06"));
+const NO_MATCH_FLOOR = Number(option("--no-match-floor", "0.2"));
 
 const STOPWORDS = new Set([
   "the", "a", "an", "and", "or", "for", "to", "of", "in", "on", "is", "are", "be", "it",
@@ -172,6 +179,56 @@ if (skills.length === 0) {
   process.exit(2);
 }
 
+const DOCUMENTS = skills.map((skill) => tokenize(`${skill.name} ${skill.description}`));
+const DOC_COUNTS = DOCUMENTS.map(termCounts);
+const DOC_DF = new Map();
+for (const counts of DOC_COUNTS) {
+  for (const term of counts.keys()) DOC_DF.set(term, (DOC_DF.get(term) ?? 0) + 1);
+}
+const AVG_DOC_LENGTH =
+  DOCUMENTS.reduce((sum, tokens) => sum + tokens.length, 0) / (DOCUMENTS.length || 1) || 1;
+const BM25_K1 = 1.2;
+const BM25_B = 0.75;
+
+/** IDF from the catalog corpus only; a prompt-only corpus would score every term 1. */
+function idf(term) {
+  const frequency = DOC_DF.get(term) ?? 0;
+  return Math.log(1 + (skills.length - frequency + 0.5) / (frequency + 0.5));
+}
+
+/**
+ * BM25 over the catalog descriptions, normalised by the IDF mass of the prompt's distinct
+ * terms. The result is a coverage fraction in roughly 0..1: "how much of what this prompt
+ * names does this description account for". Ranking and the NO_MATCH_FLOOR threshold are
+ * both in that one unit, and unlike cosine the score does not shrink just because the
+ * prompt is long or contains words the catalog has never seen.
+ */
+function scorePrompt(prompt) {
+  const queryTerms = [...new Set(tokenize(prompt))];
+  const queryIdf = queryTerms.reduce((sum, term) => sum + idf(term), 0) || 1;
+  const scores = DOCUMENTS.map((tokens, i) => {
+    const counts = DOC_COUNTS[i];
+    const length = tokens.length || 1;
+    let score = 0;
+    for (const term of queryTerms) {
+      const tf = counts.get(term);
+      if (!tf) continue;
+      score +=
+        (idf(term) * (tf * (BM25_K1 + 1))) /
+        (tf + BM25_K1 * (1 - BM25_B + BM25_B * (length / AVG_DOC_LENGTH)));
+    }
+    return score / queryIdf;
+  });
+  if (EXPLAIN) {
+    const ranked = scores
+      .map((score, i) => `${skills[i].name} ${score.toFixed(3)}`)
+      .sort((a, b) => Number(b.split(" ")[1]) - Number(a.split(" ")[1]));
+    console.log(`      ${ranked.join("  |  ")}   <- ${prompt}`);
+  }
+  return scores;
+}
+
+// Collision is a description-vs-description question, so it keeps the TF-IDF cosine.
 const vectors = buildVectors(
   skills.map((skill) => ({ text: `${skill.name} ${skill.description}` })),
 );
@@ -216,17 +273,6 @@ for (const [index, skill] of skills.entries()) {
   if (negatives.length < 8) record(false, "fail", `${skill.name}: ${negatives.length} should_not_trigger cases, 8 required`);
 
   let rankOne = 0;
-  const scorePrompt = (prompt) => {
-    const vector = buildVectors([{ text: prompt }])[0];
-    const scores = vectors.map((other) => cosine(vector, other));
-    if (EXPLAIN) {
-      const ranked = scores
-        .map((score, i) => `${skills[i].name} ${score.toFixed(3)}`)
-        .sort((a, b) => Number(b.split(" ")[1]) - Number(a.split(" ")[1]));
-      console.log(`      ${ranked.join("  |  ")}   <- ${prompt}`);
-    }
-    return scores;
-  };
 
   const triggerScores = [];
 
@@ -268,10 +314,14 @@ for (const [index, skill] of skills.entries()) {
     // either case reports a failure that says nothing about the description.
     const best = scores.indexOf(Math.max(...scores));
     if (skills.length > 1 && scores[best] >= NO_MATCH_FLOOR && best === index) {
+      const sibling = scores
+        .map((score, i) => ({ score, name: skills[i].name, index: i }))
+        .filter((entry) => entry.index !== index)
+        .sort((a, b) => b.score - a.score)[0];
       record(
         false,
         "fail",
-        `${skill.name}: should_not_trigger wins the route — "${testCase.prompt}" (${scores[index].toFixed(3)} vs best sibling ${scores[best].toFixed(3)})`,
+        `${skill.name}: should_not_trigger wins the route — "${testCase.prompt}" (${scores[index].toFixed(3)} vs best sibling ${sibling.name} ${sibling.score.toFixed(3)})`,
       );
     }
   }

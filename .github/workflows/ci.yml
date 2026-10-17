@@ -5,26 +5,83 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - name: Validate skill layout and frontmatter
         run: node scripts/validate.mjs
+
       - name: Test the validator against its fixtures
         run: node scripts/validate.test.mjs
-      - name: Check the routing layer
+
+      - name: Test the probe against its offline fixtures
+        run: node scripts/probe.test.mjs
+
+      - name: Test the routing layer against sibling catalogs
+        run: node scripts/eval-routing.test.mjs
+
+      - name: Check the routing layer for this repository
         run: node scripts/eval-routing.mjs
-      - name: Check the scripts parse
+
+      - name: Check every script parses
         run: |
-          node --check scripts/validate.mjs
-          node --check scripts/eval-routing.mjs
-          node --check skills/mimic/scripts/mimic-probe.mjs
-      - name: Check the installers are syntactically valid
+          for f in scripts/*.mjs skills/mimic/scripts/*.mjs; do
+            node --check "$f"
+          done
+
+      - name: Smoke-test the POSIX installer
         run: |
           sh -n install.sh
           bash -n install.sh
+          ./install.sh --help >/dev/null
+          ./install.sh --list >/dev/null
+          tmp=$(mktemp -d)
+          ./install.sh --project "$tmp" --list >/dev/null
+          ./install.sh --project "$tmp" >/dev/null
+          test -f "$tmp/.dsh/skills/mimic/SKILL.md"
+          ./install.sh --project "$tmp" --force >/dev/null
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Parse-check the PowerShell installer
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $PWD 'install.ps1'), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+
+      - name: Smoke-test the PowerShell installer
+        shell: pwsh
+        run: |
+          ./install.ps1 -Help
+          ./install.ps1 -List
+          $tmp = Join-Path $env:RUNNER_TEMP 'mimic-project'
+          New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+          ./install.ps1 -Target project-dsh -ProjectPath $tmp
+          if (-not (Test-Path (Join-Path $tmp '.dsh/skills/mimic/SKILL.md'))) {
+            throw 'install.ps1 did not install the skill'
+          }

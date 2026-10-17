@@ -27,12 +27,20 @@
 
 **DSH**
 
-```powershell
+```text
 git clone https://github.com/Spkicn/mimic.git
 cd mimic
-./install.ps1                 # 装到 ~/.dsh/skills
+
+# Windows
+./install.ps1                          # -> ~/.dsh/skills
 ./install.ps1 -Target project-dsh -ProjectPath C:\code\myapp
+
+# macOS / Linux
+./install.sh                           # -> ~/.dsh/skills
+./install.sh --project ~/code/myapp    # -> <project>/.dsh/skills
 ```
+
+两个安装脚本都支持试运行（`-List` / `--list`）和覆盖安装（`-Force` / `--force`）。
 
 **Claude Code**
 
@@ -67,6 +75,7 @@ mkdir -p .claude/skills && cp -R mimic/skills/mimic .claude/skills/
 | **闭环** | 交付物是磁盘上的文件，外加一张"采纳了 / 故意没采纳 / 原因"对照表——不是聊天窗口里的建议。implementation 模式下交付物是改动后的源码加一段来源说明。 |
 | **约束测试** | 只有当你能说出"是什么约束逼出了这个形状"、并且证明自己也有同样的约束时，才采纳它。否则就是 cargo cult——而"你其实不需要它"本身就是结论。 |
 | **净室两段式** | 先用你自己的话把模式写出来，然后关掉来源再动手实现。这才让"绝不抄代码"从承诺变成一道工序。 |
+| **路由也被测** | `description` 就是路由器，所以仓库会让每条 eval prompt 去和一组同类 description 竞争打分。不该路由到这里的 prompt 会让 CI 失败，而不是等到评审时才发现。 |
 
 还有一个降级模式：**连不上网就不给答案。** GitHub 不可达时，agent 明确说明并停止，而不是凭记忆
 重建仓库信息。
@@ -83,10 +92,14 @@ mkdir -p .claude/skills && cp -R mimic/skills/mimic .claude/skills/
 # agent 在底层实际执行的命令
 node skills/mimic/scripts/mimic-probe.mjs owner/repo owner/repo2 --max-chars 1200
 node skills/mimic/scripts/mimic-probe.mjs --search "rate limiter" --language python
+node skills/mimic/scripts/mimic-probe.mjs owner/repo --paths .github/PULL_REQUEST_TEMPLATE.md
 ```
 
-探针会输出 `stars | license | pushed_at | archived`，以及 README、根目录树、依赖清单——正是模型
-最爱编、也最容易编错的那些字段。设置 `GITHUB_TOKEN` 可提高限流额度；结果缓存在 `.mimic-cache/`。
+探针会输出抓取日期、默认分支与 commit SHA、`stars | license | pushed_at | archived`，以及
+README、根目录树、依赖清单——正是模型最爱编、也最容易编错的那些字段。退出码：`0` 干净，
+`2` 用法错误，`3` 某个仓库抓取失败，`4` 目录树降级但可用；**绝不会在只抓到一半时返回 0**。
+token 失效会直接报错，而不是伪装成"repository not found"。`--refresh` 忽略缓存，
+`--no-cache` 关闭缓存；设置 `GITHUB_TOKEN` 可提高限流额度；结果在 `.mimic-cache/` 缓存 24 小时。
 
 ## 仓库结构
 
@@ -105,10 +118,12 @@ skills/mimic/
   evals/evals.json              # Tier 2 用例：触发、近似误触、质量
 AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它
 CONTRIBUTING.md                 # 怎么贡献，以及什么样的报告有用
-scripts/validate.mjs            # Tier 1 自检：frontmatter、description 单行、25–150 行区间、路由、evals、链接
+scripts/validate.mjs            # Tier 1 自检：frontmatter、宿主长度限制、25–150 行区间、路由、evals、链接、README 同步
 scripts/validate.test.mjs       # 离线 fixture 测试，校验器每一条规则各一个
-scripts/eval-routing.mjs        # Tier 2：这个 description 到底会不会被路由到
-.github/workflows/ci.yml        # 每次 push 跑自检、fixture 测试与语法检查
+scripts/eval-routing.mjs        # Tier 2：这个 description 到底会不会被路由到（对同类 description 做 BM25）
+scripts/eval-routing.test.mjs   # 路由打分的同类目录 fixture 测试
+scripts/probe.test.mjs          # 探针的离线 fixture：鉴权、缓存、截断、退出码
+.github/workflows/ci.yml        # 每次 push 跑全部检查、fixture 测试与安装脚本冒烟（Linux + Windows）
 .github/PULL_REQUEST_TEMPLATE.md
 .claude-plugin/marketplace.json # Claude Code 插件清单
 install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
@@ -123,6 +138,7 @@ install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
 - **模仿结构，不模仿装饰。** emoji 标题和徽章墙不是规范；章节契约和承诺才是。
 - **把文件写出来。** 建议会挥发，仓库里的文件不会。
 - **产物的 license 属于你，不属于来源。** 从 GPL 项目学习完全自由——但一个字都不抄。
+- **测路由器，不只测正文。** 没人打过分的 description 只是猜；每条 eval prompt 都要和它竞争的 description 一起打分。
 
 ## 先行工作与致谢
 
@@ -145,9 +161,19 @@ install.ps1 / install.sh        # DSH / Claude / 项目内安装脚本
 欢迎 issue 和 PR，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。最有价值的贡献是**失败报告**：agent
 断言了它没有抓取过的仓库信息，或者采纳了一条不适合本项目的约定。这些会变成 reference 里的硬性红线。
 
-提交 PR 前请先跑 `node scripts/validate.mjs` 和 `node scripts/validate.test.mjs`——CI 两个都跑。
+提交 PR 前先跑下面这些检查——CI 全都会跑：
+
+```bash
+node scripts/validate.mjs
+node scripts/validate.test.mjs
+node scripts/eval-routing.mjs
+node scripts/eval-routing.test.mjs
+node scripts/probe.test.mjs
+```
+
 请保持 `SKILL.md` 在 25–150 行之间，细节放进 `reference/`；这是本仓库自己的约定，校验脚本两端
-都会强制执行。面向 agent 的规则写在 [AGENTS.md](AGENTS.md)。
+都会强制执行。两个 README 会做结构漂移检查，所以改 `README.md` 时要同步改 `README.zh.md`。
+面向 agent 的规则写在 [AGENTS.md](AGENTS.md)。
 
 ## License
 

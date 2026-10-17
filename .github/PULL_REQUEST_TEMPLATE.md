@@ -11,7 +11,10 @@
 ## Checks
 
 - [ ] `node scripts/validate.mjs` passes
+- [ ] `node scripts/validate.test.mjs` passes
+- [ ] `node scripts/eval-routing.mjs` and `node scripts/eval-routing.test.mjs` pass
+- [ ] `node scripts/probe.test.mjs` passes
 - [ ] `SKILL.md` is still between 25 and 150 lines
 - [ ] New rules name the case that required them
-- [ ] `README.md` and `README.zh.md` still agree (if structure, modes, or install changed)
+- [ ] `README.md` and `README.zh.md` still agree (the validator checks their structure)
 - [ ] Any claim about another repository added to the docs was fetched, not recalled

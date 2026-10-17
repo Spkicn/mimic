@@ -6,10 +6,11 @@
  * Enforces this repository's own conventions:
  *   - every skills * /SKILL.md has valid frontmatter (name, description, no legacy keys)
  *   - the skill directory name matches the frontmatter name
- *   - `description` is a single-line scalar of usable length
+ *   - `description` is a single-line scalar within the host's portable length limits
  *   - SKILL.md stays within the 25-150 line band (detail belongs in reference/)
  *   - every relative markdown link resolves
  *   - every reference file is routed to from SKILL.md, and every route exists
+ *   - README.md and README.zh.md exist together and agree on structure
  *   - the plugin manifest parses and its skill paths resolve
  *
  * No dependencies. Exits non-zero on the first category of failure found.
@@ -24,6 +25,11 @@ const ROOT = process.argv[2]
   ? resolve(process.argv[2])
   : resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Both limits come from the Agent Skills specification (name <= 64 chars, description
+// <= 1024 chars). This repository's own stricter rules sit on top; these are the portable
+// floor that a host parser may enforce silently.
+const SKILL_NAME_MAX = 64;
+const DESCRIPTION_MAX = 1024;
 const LEGACY_KEYS = ["userInvocable", "modelInvocable", "disableModelInvocation"];
 const SKILL_LINE_FLOOR = 25;
 const SKILL_LINE_BUDGET = 150;
@@ -63,6 +69,7 @@ for (const file of skillFiles) {
 
   if (!name) fail(`${rel}: frontmatter requires name`);
   else if (!SKILL_NAME.test(name)) fail(`${rel}: name "${name}" is not kebab-case`);
+  else if (name.length > SKILL_NAME_MAX) fail(`${rel}: name is ${name.length} chars, over the ${SKILL_NAME_MAX}-char host limit`);
   else if (dirname(rel).split("/").pop() !== name) fail(`${rel}: directory does not match name "${name}"`);
   else ok(`${rel}: name=${name}`);
 
@@ -81,6 +88,8 @@ for (const file of skillFiles) {
       fail(`${rel}: description wraps onto a second line; keep it on one line for cross-host portability`);
     } else if (description.length < 60) {
       fail(`${rel}: description too short (${description.length} chars) to route reliably`);
+    } else if (description.length > DESCRIPTION_MAX) {
+      fail(`${rel}: description is ${description.length} chars, over the ${DESCRIPTION_MAX}-char host limit`);
     } else {
       ok(`${rel}: description ${description.length} chars, single line`);
     }
@@ -151,6 +160,46 @@ for (const file of files.filter((p) => p.endsWith(".md"))) {
   }
 }
 ok(`${linkCount} relative link(s) resolve`);
+
+// README.md and README.zh.md are translations of each other. Prose cannot be compared
+// mechanically, but structure can: the heading outline, the number of fenced code blocks,
+// and the number of table rows drift as soon as one file is updated and the other is not.
+// A repository that ships neither file is not using this convention and is skipped.
+const readmePaths = [join(ROOT, "README.md"), join(ROOT, "README.zh.md")];
+const readmePresent = readmePaths.filter((path) => existsSync(path));
+if (readmePresent.length > 0) {
+  if (readmePresent.length === 1) {
+    fail(`${relative(ROOT, readmePresent[0])}: README.md and README.zh.md must ship together`);
+  } else {
+    const shape = (raw) => {
+      const headings = [];
+      let fences = 0;
+      let tableRows = 0;
+      let inFence = false;
+      for (const line of raw.split(/\r?\n/)) {
+        if (/^```/.test(line)) {
+          fences += 1;
+          inFence = !inFence;
+          continue;
+        }
+        if (inFence) continue;
+        if (/^#{1,6}\s/.test(line)) headings.push(line.match(/^(#{1,6})/)[1].length);
+        else if (/^\|/.test(line)) tableRows += 1;
+      }
+      return { headings, fences, tableRows };
+    };
+    const en = shape(readFileSync(readmePaths[0], "utf8"));
+    const zh = shape(readFileSync(readmePaths[1], "utf8"));
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    if (!same(en.headings, zh.headings)) {
+      fail(`README.md and README.zh.md heading outlines differ (${en.headings.length} vs ${zh.headings.length} headings); keep the two files in sync`);
+    } else if (en.fences !== zh.fences || en.tableRows !== zh.tableRows) {
+      fail(`README.md and README.zh.md structure differs (fences ${en.fences} vs ${zh.fences}, table rows ${en.tableRows} vs ${zh.tableRows}); keep the two files in sync`);
+    } else {
+      ok(`README.md and README.zh.md agree on structure (${en.headings.length} headings, ${en.fences} fences, ${en.tableRows} table rows)`);
+    }
+  }
+}
 
 const manifestPath = join(ROOT, ".claude-plugin", "marketplace.json");
 try {

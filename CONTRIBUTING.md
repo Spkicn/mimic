@@ -8,12 +8,17 @@ gets better, and it is the reason the repository exists.
 
 ## Before you open a PR
 
-1. Run `node scripts/validate.mjs` and `node scripts/validate.test.mjs`. CI runs both.
-   If you added a rule to the validator, add the fixture that makes it fire — a rule with no
-   failing fixture is a rule nobody has seen work.
-2. If you changed a rule, name the case that made it necessary.
-3. If you changed the mode table, the install paths, or the repository structure, update
-   both `README.md` and `README.zh.md`.
+1. Run the whole gate locally:
+   `node scripts/validate.mjs`, `node scripts/validate.test.mjs`, `node scripts/eval-routing.mjs`,
+   `node scripts/eval-routing.test.mjs`, and `node scripts/probe.test.mjs`. CI runs all of them
+   on Linux, plus installer smoke tests on Linux and Windows.
+2. If you added a rule to the validator, add the fixture that makes it fire — a rule with no
+   failing fixture is a rule nobody has seen work. The same goes for the routing scorer and
+   the probe: their failure modes are invisible until a fixture reproduces one.
+3. If you changed a rule, name the case that made it necessary.
+4. If you changed the mode table, the install paths, or the repository structure, update
+   both `README.md` and `README.zh.md`. The validator compares their structure and fails on
+   drift, so this is not left to review.
 
 ## Changing a rule
 

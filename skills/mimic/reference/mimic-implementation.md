@@ -87,7 +87,8 @@ This is how "never copy code" becomes operational instead of aspirational.
 
 1. **Describe.** With the source open, write the pattern in **your own words**, as
    pseudocode, and save a **permalink at the commit SHA** for each claim. The permalink is
-   the evidence — a branch URL rots, a SHA does not.
+   the evidence — a branch URL rots, a SHA does not. The probe prints the commit SHA of the
+   default branch it fetched; use that SHA rather than the branch name.
 2. **Implement.** Close the source. Write the implementation from your own pseudocode, in
    this project's names, types and error strategy. Do not re-open the file while typing.
 3. **Verify by test, not by diff.** A test proves the behaviour. If you catch yourself
