@@ -4,6 +4,15 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.9.6 — 2026-10-19
+
+- `reference/evidence.md`: new **"Where an instruction lives"** — a pre-registered ablation
+  measured the same formal directive at 0.81 when placed at both ends of the per-step
+  runtime-context snapshot, 0.56 at the tail only, and 0.012 when the instruction was carried
+  by the system prompt (baseline 0.014). A rule that must hold every step belongs in the
+  per-step context; a checkable wording rule beats an identity narrative (0.77–0.82 vs 0.13).
+- `SKILL.md`: the evidence pointer now names that finding.
+
 ## 0.9.5 — 2026-10-19
 
 - Skill: a new **"Where to look — channels, not just GitHub"** table in `SKILL.md` (seven

@@ -114,6 +114,22 @@ so the reader knows how much weight each project's analysis carries.
 - **Quote, then paraphrase.** Keep short quoted fragments as evidence; do not reproduce
   long passages of anyone's prose into your output. See [licensing.md](licensing.md).
 
+## Where an instruction lives
+
+Placement decides obedience more than wording. A pre-registered ablation of one formal
+directive (the "we" reasoning register) measured the same sentence in different positions: the
+per-step runtime-context snapshot at **head + tail 0.81**, head only 0.68, tail only 0.56, no
+anchor 0.02 — while rewriting the system prompt to carry the same instruction moved nothing
+(0.012 versus a 0.014 baseline). Two rules follow:
+
+- A rule that must hold on every step belongs in the per-step context (head and tail), not in
+  a persona paragraph that is read once and sits far from the generation point.
+- A wording-level rule that can be checked ("every paragraph begins with X") beats an identity
+  narrative ("we are a team thinking as one"): 0.77–0.82 versus 0.13.
+
+Source: `yjh051108/fengcha-2.0`, Apache-2.0, n=10 per position — direction credible, exact
+values not to extrapolate. Its author measured the reasoning register only, never correctness.
+
 ## Recording
 
 For each project, keep a compact record as you go:
