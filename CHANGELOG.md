@@ -4,6 +4,21 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.5 — 2026-10-20
+
+- No spoken licence warning. The owner asked for copying to be silent ("抄之前说一句义务也不想要"):
+  the obligation now lives in the report's `Obligation` column and the commit message, never as
+  a conversational warning. Rule 6 became "record it; do not lecture".
+- **The copy check** is now a standing step before the first new file, not an option: search
+  the dependencies, lockfile, sibling packages and already-linked libraries for the thing you
+  are about to write; read the licence; compare the integration surface with the lines you
+  would write; then copy, adapt the ideas, or write. `reference/mimic-implementation.md` opens
+  with it, and rule 1 of `licensing.md` says the question is asked every time.
+- **Adaptation is explicit.** Copy step 4 became a checklist: project vocabulary, its error
+  strategy and logging, remove foreign configuration, delete dead paths, match formatting and
+  types, wire into existing modules and tests, and list every adaptation. An unmodified copy
+  where the project needed changes is unfinished work.
+
 ## 0.10.4 — 2026-10-19
 
 - Copyleft and unlicensed code are no longer refused. The repository owner explicitly asked for

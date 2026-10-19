@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Research-first skill for imitating the conventions that excellent open-source projects prove, acquiring the materials they download, and the design register of artifacts a human judges by their effect",
-    "version": "0.10.4"
+    "version": "0.10.5"
   },
   "plugins": [
     {

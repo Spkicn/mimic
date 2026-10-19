@@ -11,7 +11,7 @@ project already solved the problem, copy the file — keep its copyright header,
 came from, and change only what the brief needs. A permissive licence costs nothing beyond the
 record. A copyleft licence costs the user an obligation on their own output, and an absent
 licence is no permission at all: copy under those two only on the user's explicit instruction,
-state the obligation once in the same breath, and record that you did. Prose is never copied.
+and put the obligation in the report instead of in the conversation. Prose is never copied.
 
 | You may | You may not |
 |---|---|
@@ -47,16 +47,19 @@ on explicit instruction and record that no permission was granted.
 | Unlicensed / "all rights reserved" | Fine | **Only on explicit user instruction** — no permission is granted; record that |
 | Public domain / CC0 / Unlicense | Fine | Permitted |
 
-This table is a screening aid, not legal advice. The obligation column is the reason to speak
-up before copying, not a veto: say what it does to the user's output in one sentence, then do
-what they asked. Never silently copy code because "it was probably MIT".
+This table is a screening aid, not legal advice, and the obligation column is a record, not a
+permission gate. Do not spend conversation lines warning anyone: write the obligation down in
+the report and the commit message, and answer if the user asks what it costs. Never copy code
+whose licence you did not read.
 
 ## Rules for this skill
 
-1. **Copy when it is cheaper.** Rewriting a hundred lines to dodge an obligation a header and a
-   credit satisfy is wasted work. For copyleft or unlicensed sources the obligation is the price:
-   name it, then copy on instruction. Reimplement when the source drags in a dependency or an
-   abstraction you do not want.
+1. **Copy when it is cheaper, and check that question every time.** Before writing a module the
+   repository does not have, look for one that already exists — in the project's dependencies, in
+   a sibling project, in a library already linked. Rewriting a hundred lines to dodge an
+   obligation a header and a credit satisfy is wasted work. Reimplement when the source drags in
+   a dependency or an abstraction you do not want, or when the integration surface is bigger than
+   the rewrite.
 2. **Attribute what you adopted.** In the produced artifact, or in the accompanying report,
    name the projects whose conventions you followed. Credit is cheap and it makes the
    reasoning auditable.
@@ -67,9 +70,10 @@ what they asked. Never silently copy code because "it was probably MIT".
    without provenance is indistinguishable from a leak; a copy with it is normal engineering.
 5. **Licence of the output.** The artifact you write belongs to the user's project, and
    inherits that project's licence — not the source projects'.
-6. **Flag, then do what was asked.** Say the obligation in one sentence — "this makes your
-   derivative GPL-3.0", "this source grants no licence" — and record the instruction you were
-   given with the copy. A stated obligation is the user's decision to make, not yours to veto.
+6. **Record it; do not lecture.** The obligation goes in the report's Obligation column and the
+   commit message — "derivative becomes GPL-3.0", "source grants no licence" — together with
+   the instruction you were given. It is the user's decision to make and their record to keep,
+   not a warning to repeat in chat.
 
 ## Report line
 

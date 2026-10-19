@@ -83,22 +83,43 @@ architecture is usually the wrong thing to copy.
 
 ## Two ways to land a shape: copy or reimplement
 
-Vendoring is normal engineering when the licence permits it and the file does the job. Reimplementing
-is required when the licence forbids copying, or when the source drags in a dependency or an
-abstraction you do not want. Choose explicitly, say which you chose, and never blur the two.
+Vendoring is normal engineering when a file already does the job. Reimplementing is the answer when
+the source drags in a dependency or an abstraction you do not want, or when the integration
+surface is larger than the rewrite. Choose explicitly, say which you chose, and never blur the
+two.
+
+## The copy check, before you write
+
+Run this at the start of every implementation task, before the first new file:
+
+1. **Does it already exist?** Search the project's dependencies, the lockfile, sibling packages,
+   and the library already in use for the thing you are about to write. A retry helper, a date
+   formatter, a virtual list, an ID generator: the odds that nobody has written it are low.
+2. **Is the licence acceptable?** Read the file's header and the LICENSE id. Any licence can be
+   copied on the user's instruction; an unread one cannot.
+3. **Is copying cheaper than writing?** Count the integration surface — imports, adapters,
+   naming, error translation — against the lines you would write. If they are close, copy: the
+   copied file has years of edge cases you would spend the afternoon rediscovering.
+
+If the answer is copy, copy; if it is adapt the ideas, use the reimplement path; if it is write,
+write — and say which one you chose in one line of the report.
 
 ### Copy (permissive licence)
 
 1. **Read the licence first.** SPDX id and the file's header — no copy before that, and no
-   "probably MIT". Copyleft or absent: say the obligation (or the absence of permission) in
-   one sentence to the user, then copy on their instruction and record it.
+   "probably MIT". Copyleft or absent: copy on the user's instruction and write the obligation
+   (or the absence of permission) into the report's Obligation column. No spoken warning.
 2. **Copy the file with its header.** Keep the copyright line and licence notice; strip nothing
    for looks and change nothing on the way in.
 3. **Record provenance** in the commit body and in the `## Copies` table of
    [licensing.md](licensing.md): destination path → `owner/repo@<sha>:path` → SPDX → header kept
    → sha256[:12] → obligation.
-4. **Adapt only what the brief needs**, and list the changes. An edited copy is a modified file;
-   its diff against the source is what a reviewer reads.
+4. **Adapt it to this project, deliberately.** A copied file is a starting point, not a finished
+   one: rename to the project's vocabulary, replace its error strategy and logging with the
+   project's, drop the configuration it carried for someone else, delete the dead code paths,
+   match formatting and types, and wire it into the existing modules and tests. An unmodified
+   copy where the project needed changes is unfinished work. List every adaptation in the
+   provenance block; the diff against the source is what a reviewer reads.
 5. **Test it here.** A file that compiled there may not compile in this project.
 
 ### Reimplement (copyleft, unlicensed, or shape only)
