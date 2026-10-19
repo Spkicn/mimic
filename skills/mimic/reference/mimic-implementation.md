@@ -90,12 +90,13 @@ abstraction you do not want. Choose explicitly, say which you chose, and never b
 ### Copy (permissive licence)
 
 1. **Read the licence first.** SPDX id and the file's header — no copy before that, and no
-   "probably MIT".
+   "probably MIT". Copyleft or absent: say the obligation (or the absence of permission) in
+   one sentence to the user, then copy on their instruction and record it.
 2. **Copy the file with its header.** Keep the copyright line and licence notice; strip nothing
    for looks and change nothing on the way in.
 3. **Record provenance** in the commit body and in the `## Copies` table of
    [licensing.md](licensing.md): destination path → `owner/repo@<sha>:path` → SPDX → header kept
-   → sha256[:12].
+   → sha256[:12] → obligation.
 4. **Adapt only what the brief needs**, and list the changes. An edited copy is a modified file;
    its diff against the source is what a reviewer reads.
 5. **Test it here.** A file that compiled there may not compile in this project.
@@ -127,7 +128,7 @@ Licence:           <SPDX id, or "none — ideas only">
 Way:               <copied | reimplemented>
 Shared constraint: <the constraint both projects have>
 Diverged because:  <where we deliberately differ, or "not diverged">
-Copies:            <destination → owner/repo@<sha>:path → SPDX → header kept → sha256[:12]>
+Copies:            <destination → owner/repo@<sha>:path → SPDX → header kept → sha256[:12] → obligation>
 ```
 
 Put it in the commit body or the pull-request description. Escalate to

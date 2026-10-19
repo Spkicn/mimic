@@ -4,6 +4,20 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.4 — 2026-10-19
+
+- Copyleft and unlicensed code are no longer refused. The repository owner explicitly asked for
+  this boundary to be opened ("放开这个边界", 2026-10-19) and takes the risk; the skill's
+  job is now to make the risk visible rather than to block it. A GPL/AGPL/LGPL copy states its
+  obligation to the user before the copy, and an unlicensed copy is recorded as carrying no
+  permission; both land in the `## Copies` table alongside the MIT/BSD rows.
+- `reference/licensing.md`: the compatibility table's "No" cells became "Yes, with the
+  obligation recorded"; rule 1 loses "when it is licensed"; rule 6 is now "flag, then do what
+  was asked". `mimic-implementation.md` copy step 1 and the provenance line carry the
+  obligation. `mimic-gate.md` hard line: a copyleft copy means the obligation was stated.
+- `SKILL.md`: description says "licensed code, with provenance and obligations noted"; the
+  comparables rule allows the copy when the user accepts the obligation.
+
 ## 0.10.3 — 2026-10-19
 
 - Copying source code became a first-class path. The old hard line ("never copy code",

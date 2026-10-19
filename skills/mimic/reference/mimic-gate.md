@@ -74,8 +74,9 @@ Do not report success until every line holds. Report the gate itself.
 - **No network, no answer.** If you cannot reach the web, say so and stop. Do not reconstruct
   repositories, stars, licences or trees from memory. Say what you would have checked.
 - **Copied code is recorded code.** Copy only from a licence that permits it, keep the
-  copyright header, and record destination → `owner/repo@<sha>:path` → SPDX → header kept → sha256[:12].
-  Copyleft or unlicensed sources are read for ideas only; prose is never copied either way.
+  copyright header, and record destination → `owner/repo@<sha>:path` → SPDX → header kept → sha256[:12] → obligation.
+  A copyleft or unlicensed copy means the obligation was stated to the user before the copy and
+  is written down with it; prose is never copied either way.
 - **Never let one project be the answer.** A single admired repository is a taste, not a
   convention. Three is the floor.
 - **Never mimic decoration.** Emoji headers, badge walls and colour schemes are not
