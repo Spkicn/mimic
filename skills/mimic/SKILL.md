@@ -1,9 +1,9 @@
 ---
 name: mimic
-description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", "找素材", "用真实的图标/字体/贴图/模型", and when a page or interface must land with a human ("make this actually good", "this looks generated"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect - plus the materials rule: acquire the font, icons, images, models, audio or libraries a human would download, instead of hand-drawing every element. Not for renames, typos or version-independent logic, and never for copying source code.
+description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", "找素材", "用真实的图标/字体/贴图/模型", and when the work is judged by how it looks — a page, interface, 3D scene or demo ("make this actually good", "this looks generated", "做一个好看的页面", "搭一个场景"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect - plus the materials rule: acquire the font, icons, images, models, audio or libraries a human would download, instead of hand-drawing every element. Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.10.0"
+  version: "0.10.1"
   author: mimic
 ---
 

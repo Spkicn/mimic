@@ -4,6 +4,16 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.1 — 2026-10-19
+
+- `SKILL.md`: the description now names the visual/creative case directly — "the work is judged
+  by how it looks — a page, interface, 3D scene or demo" — with a Chinese example. Reason: the
+  catalog entry is the only thing a model sees before it decides to load a skill, and a request
+  to build a scene ("做一个微缩场景") did not match "artifact, implementation or page",
+  so the skill was never loaded even though it covered the work. No workflow change.
+- `description` trimmed back under the host's 1024-character limit; marketplace.json bumped with
+  the skill.
+
 ## 0.10.0 — 2026-10-19
 
 - `reference/mimic-assets.md`: new. The skill researched what good work looks like but left the
