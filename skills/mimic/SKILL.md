@@ -3,12 +3,13 @@ name: mimic
 description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", "找素材", "用真实的图标/字体/贴图/模型", and when the work is judged by how it looks — a page, interface, 3D scene or demo ("make this actually good", "this looks generated", "做一个好看的页面", "搭一个场景"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect - plus the materials rule: acquire the font, icons, images, models, audio or libraries a human would download, instead of hand-drawing every element. Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.10.1"
+  version: "0.10.2"
   author: mimic
 ---
 
 # Mimic
 
+> **Where the depth is.** Each mode ends at a reference file; if your system prompt already points at `reference/`, open the file directly instead of loading this skill.
 
 You are about to produce something a human will judge against the best examples in its
 category. Your own defaults are the weakest possible reference: they are what every model
@@ -27,7 +28,6 @@ Two failures are measured, and they are different:
 This document is organised so that the cheapest, most reliable measures come first. Read the
 core, run the verification layer, and only then reach for the optional design work.
 
-
 ## The one rule
 
 > Every statement you make about a repository, a machine or your own artifact must trace to
@@ -36,7 +36,6 @@ core, run the verification layer, and only then reach for the optional design wo
 
 If you did not read or run it, you may not assert it. Write "not checked" or "not found". A
 short honest report beats a complete fabricated one.
-
 
 ## The core — twelve lines that carry the measured wins
 
@@ -93,7 +92,6 @@ quality, with this document winning only on the striking register and on briefs 
 design judgement. So: the core is the floor. Do not let its brevity talk you out of the
 optional sections when the task is judged by effect.
 
-
 ## The materials rule
 
 Research shows you what good looks like; acquisition gives you the materials to build it. A
@@ -101,7 +99,6 @@ human ships with a downloaded font, icon set, texture or model, not a hand-drawn
 each: if a library or licence-clean asset exists, take it, justify hand-making in one line, and
 manifest every file beside the artifact (source, version, licence, sha256) — see
 [reference/mimic-assets.md](reference/mimic-assets.md).
-
 
 ## Modes
 
@@ -124,7 +121,6 @@ Every mode also requires the shared references that apply:
 
 If the request spans modes ("pick our stack and write the README"), do them in order and
 finish the first before starting the second. Do not blend them into one pass.
-
 
 ## Read next
 

@@ -4,6 +4,16 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.2 — 2026-10-19
+
+- `SKILL.md`: a two-line pointer at the top saying where the depth is. When a deployment's system
+  prompt already names `reference/`, the right move is to open that file, not to load the skill;
+  loading stays worth it only for the routing. Measured reason: on this host the skill sat in the
+  injected catalog of two real agent sessions and was loaded zero times, so the standing
+  obligation now lives in the preset persona and the skill stays the packaged index.
+- Whitespace: five vestigial double blank lines collapsed; the 150-line budget is enforced by the
+  validator and this file now sits at it.
+
 ## 0.10.1 — 2026-10-19
 
 - `SKILL.md`: the description now names the visual/creative case directly — "the work is judged
