@@ -123,6 +123,7 @@ skills/mimic/
     mimic-design.md             # when the artifact is judged by its effect: register, memorable opt-in, specs
     mimic-gate.md               # verification layer, completion gate, hard lines, anti-patterns
     mimic-evidence.md           # the measured record: what this buys, what it does not
+    mimic-assets.md             # the materials rule: acquire fonts, icons, images, models, libraries; licence gate, manifest, verification
   scripts/mimic-probe.mjs       # dependency-free GitHub fetcher with caching
   evals/evals.json              # Tier 2 cases: trigger, near-miss negative, quality
 AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it

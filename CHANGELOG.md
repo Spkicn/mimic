@@ -4,6 +4,24 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.0 — 2026-10-19
+
+- `reference/mimic-assets.md`: new. The skill researched what good work looks like but left the
+  model to hand-make every material; a human shipping the same project downloads a font, an
+  icon set, a texture, a model and a library. The new file carries the decision order (library
+  → asset pack → reference implementation → hand-make), a channel table with typical licences,
+  the licence gate (ship / ship-with-attribution / check / refuse), the `CREDITS.md` manifest
+  format, arrival verification (sha256, magic bytes, load test, look at it), the
+  vendor-don't-hotlink rule, a 10-minute time box with a recorded fallback, and the cases where
+  hand-making is genuinely correct.
+- `SKILL.md`: **the materials rule** section (5 lines) plus the reference routed from the modes
+  list; the description now carries the acquisition vocabulary ("找素材", real icons / fonts /
+  textures / models) so the skill routes on it.
+- `evals/evals.json`: two acquisition triggers, one negative ("download this PDF"), and one
+  quality case requiring a named library, an acquired asset with its licence, a manifest row, a
+  load verification, and an explicit list of what was still hand-made and why.
+- `README.md` / `README.zh.md`: the new reference added to the repository tree.
+
 ## 0.9.7 — 2026-10-19
 
 - `SKILL.md`: the three shared references were listed twice (once under **Modes**, once under

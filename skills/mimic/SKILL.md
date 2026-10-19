@@ -1,9 +1,9 @@
 ---
 name: mimic
-description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", and when a page or interface must land with a human ("make this actually good", "this looks generated"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect. Not for renames, typos or version-independent logic, and never for copying source code.
+description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", "找素材", "用真实的图标/字体/贴图/模型", and when a page or interface must land with a human ("make this actually good", "this looks generated"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect - plus the materials rule: acquire the font, icons, images, models, audio or libraries a human would download, instead of hand-drawing every element. Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.9.7"
+  version: "0.10.0"
   author: mimic
 ---
 
@@ -94,6 +94,15 @@ design judgement. So: the core is the floor. Do not let its brevity talk you out
 optional sections when the task is judged by effect.
 
 
+## The materials rule
+
+Research shows you what good looks like; acquisition gives you the materials to build it. A
+human ships with a downloaded font, icon set, texture or model, not a hand-drawn substitute for
+each: if a library or licence-clean asset exists, take it, justify hand-making in one line, and
+manifest every file beside the artifact (source, version, licence, sha256) — see
+[reference/mimic-assets.md](reference/mimic-assets.md).
+
+
 ## Modes
 
 Pick exactly one mode, then read the reference files it names before doing anything else.
@@ -110,6 +119,7 @@ Every mode also requires the shared references that apply:
 
 - [reference/selecting-repos.md](reference/selecting-repos.md) — **always**. How to find genuinely comparable projects instead of the most popular ones.
 - [reference/evidence.md](reference/evidence.md) — **always**. How to record and label what you found, and how to spend a bounded research budget.
+- [reference/mimic-assets.md](reference/mimic-assets.md) — **when the artifact needs real materials** (fonts, icons, images, models, audio, a library) instead of hand-drawn substitutes.
 - [reference/licensing.md](reference/licensing.md) — **before writing anything derived from another project**.
 
 If the request spans modes ("pick our stack and write the README"), do them in order and

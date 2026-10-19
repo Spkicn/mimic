@@ -4,13 +4,13 @@
     "name": "mimic contributors"
   },
   "metadata": {
-    "description": "Research-first skill for imitating the conventions that excellent open-source projects prove, and for the design register of artifacts a human judges by their effect",
-    "version": "0.9.7"
+    "description": "Research-first skill for imitating the conventions that excellent open-source projects prove, acquiring the materials they download, and the design register of artifacts a human judges by their effect",
+    "version": "0.10.0"
   },
   "plugins": [
     {
       "name": "mimic",
-      "description": "Look at comparable open-source projects before choosing a stack, writing a README, or setting repository conventions",
+      "description": "Look at comparable open-source projects, then acquire the fonts, icons, images, models and libraries a human would download instead of hand-drawing everything",
       "source": "./",
       "strict": false,
       "skills": [

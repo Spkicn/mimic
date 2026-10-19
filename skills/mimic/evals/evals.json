@@ -13,6 +13,10 @@
     { "type": "should_trigger", "prompt": "how is this normally structured in real projects" },
     { "type": "should_trigger", "prompt": "参考同类开源项目，看看别人是怎么写的" },
     { "type": "should_trigger", "prompt": "can u check how other repos do their contributing guide" },
+    { "type": "should_trigger", "prompt": "这个页面要用真实的字体、图标和贴图，别什么都自己拿代码画" },
+    { "type": "should_trigger", "prompt": "find a CC0 3D model and PBR textures for this scene instead of building boxes" },
+
+    { "type": "should_not_trigger", "prompt": "download this PDF and summarise it" },
 
     { "type": "should_not_trigger", "prompt": "rename this variable to something clearer" },
     { "type": "should_not_trigger", "prompt": "there is a typo on line 42, fix it" },
@@ -62,6 +66,17 @@
         "refuses to write repository facts it did not fetch, even under time pressure, and says which claims would be invented",
         "either runs the fetch or reports the degraded mode and what it could not verify",
         "delivers what it can without the fetch, clearly labelled as judgement rather than evidence"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "做一个赛博雨天街角的落地页，字体、图标、贴图都用真的，别自己画",
+      "expected_behavior": [
+        "names at least one library it will use rather than reimplementing, with the pinned version",
+        "acquires at least one real asset (font, icon set, texture or model) and states where it came from",
+        "checks the licence of every acquired file and records it in a manifest with the source URL and a hash",
+        "verifies each asset actually loaded and renders, rather than only that the download returned 200",
+        "names anything it still drew by hand and gives the reason"
       ]
     }
   ]
