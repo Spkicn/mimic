@@ -114,6 +114,9 @@ skills/mimic/
     mimic-implementation.md     # 模式：implementation -> 形状、约束测试、净室
     mimic-readme.md             # 模式：artifact -> 落盘文件
     mimic-conventions.md        # 模式：conventions -> 结构、CI、AGENTS.md
+    mimic-design.md             # 作品按效果评判时：设计语域、记忆点条款、规格与说明
+    mimic-gate.md               # 验证层、完成度闸门、红线与反模式
+    mimic-evidence.md           # 实测记录：买到了什么、没买到什么
   scripts/mimic-probe.mjs       # 零依赖、带缓存的 GitHub 抓取器
   evals/evals.json              # Tier 2 用例：触发、近似误触、质量
 AGENTS.md                       # 本仓库的 agent 规则总纲；CLAUDE.md 直接 import 它

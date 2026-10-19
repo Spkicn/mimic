@@ -120,6 +120,9 @@ skills/mimic/
     mimic-implementation.md     # mode: implementation -> shape, constraint test, clean room
     mimic-readme.md             # mode: artifact -> file on disk
     mimic-conventions.md        # mode: conventions -> layout, CI, AGENTS.md
+    mimic-design.md             # when the artifact is judged by its effect: register, memorable opt-in, specs
+    mimic-gate.md               # verification layer, completion gate, hard lines, anti-patterns
+    mimic-evidence.md           # the measured record: what this buys, what it does not
   scripts/mimic-probe.mjs       # dependency-free GitHub fetcher with caching
   evals/evals.json              # Tier 2 cases: trigger, near-miss negative, quality
 AGENTS.md                       # canonical agent rules for this repo; CLAUDE.md imports it

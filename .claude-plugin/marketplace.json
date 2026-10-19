@@ -4,8 +4,8 @@
     "name": "mimic contributors"
   },
   "metadata": {
-    "description": "Research-first skill for imitating the conventions of comparable open-source projects",
-    "version": "0.3.0"
+    "description": "Research-first skill for imitating the conventions that excellent open-source projects prove, and for the design register of artifacts a human judges by their effect",
+    "version": "0.9.4"
   },
   "plugins": [
     {
