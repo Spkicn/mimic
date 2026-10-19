@@ -127,6 +127,21 @@ Fetch — with `scripts/mimic-probe.mjs` or the GitHub API — and record:
 Do not report a field you did not fetch. `pushed_at` and `license` are exactly the fields a
 model is most tempted to invent and most likely to be wrong about.
 
+## Channels beyond GitHub
+
+| Channel | Best for | Watch for |
+|---|---|---|
+| Similar repositories (source, not README claims) | implementation shape, repo conventions, artifact structure | popularity bias; the same genre converging on the same average |
+| Official docs, for the exact version you ship | APIs, configuration, supported behaviour | prose that contradicts the packaged source |
+| Specification / RFC / protocol text | wire formats, required behaviour, error semantics | implementing the spec the library deviates from |
+| Installed package source (`node_modules`, `site-packages`, `vendor`, lockfile) | what actually runs at this version | minified or transpiled builds; ignored files |
+| Changelog, release notes, issue threads | migration paths, known breakage, why the API is odd | advice for another major version |
+| Starters, templates, scaffolds | a working skeleton with the right file layout | abandoned templates; another ecosystem's conventions |
+| Precedent inside the target repository | the house style already accepted here | copying a local mistake into a new place |
+
+Read before you cite; never paste a URL you did not fetch. When two channels disagree, name
+both and follow the one closest to the version in the lockfile. Copy patterns, not prose.
+
 ## Degraded mode
 
 If one channel is unreachable, say so and use another before you stop: official docs,

@@ -94,25 +94,6 @@ design judgement. So: the core is the floor. Do not let its brevity talk you out
 optional sections when the task is judged by effect.
 
 
-## Where to look — channels, not just GitHub
-
-GitHub is one channel. The best available evidence depends on what you are imitating, and a
-decision grounded in two independent channels is worth more than one grounded in ten repos of
-the same genre:
-
-| Channel | Best for | Watch for |
-|---|---|---|
-| Similar repositories (source, not README claims) | implementation shape, repo conventions, artifact structure | popularity bias; the same genre converging on the same average |
-| Official docs, for the exact version you ship | APIs, configuration, supported behaviour | prose that contradicts the packaged source |
-| Specification / RFC / protocol text | wire formats, required behaviour, error semantics | implementing the spec the library deviates from |
-| Installed package source (`node_modules`, `site-packages`, `vendor`, lockfile) | what actually runs at this version | minified or transpiled builds; ignored files |
-| Changelog, release notes, issue threads | migration paths, known breakage, why the API is odd | advice for another major version |
-| Starters, templates, scaffolds | a working skeleton with the right file layout | abandoned templates; another ecosystem's conventions |
-| Precedent inside the target repository | the house style already accepted here | copying a local mistake into a new place |
-
-Read before you cite; never paste a URL you did not fetch. When two channels disagree, name
-both and follow the one closest to the version in the lockfile. Copy patterns, not prose.
-
 ## Modes
 
 Pick exactly one mode, then read the reference files it names before doing anything else.
@@ -139,7 +120,7 @@ finish the first before starting the second. Do not blend them into one pass.
 
 Everything below is one level deep and routed from here; nothing else needs loading.
 
-- [reference/selecting-repos.md](reference/selecting-repos.md) — **always**. Comparability axes, search strategy, what makes a candidate wrong.
+- [reference/selecting-repos.md](reference/selecting-repos.md) — **always**. Comparability axes, search strategy, what makes a candidate wrong, and the seven channels beyond GitHub.
 - [reference/evidence.md](reference/evidence.md) — **always**. E1–E4 evidence levels, budget, record format.
 - [reference/licensing.md](reference/licensing.md) — **before writing anything derived from another project**.
 - [reference/mimic-stack.md](reference/mimic-stack.md) — mode: stack.
