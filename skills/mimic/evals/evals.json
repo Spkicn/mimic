@@ -19,7 +19,7 @@
     { "type": "should_not_trigger", "prompt": "implement a bubble sort in TypeScript" },
     { "type": "should_not_trigger", "prompt": "why is this test failing?" },
     { "type": "should_not_trigger", "prompt": "review my pull request for bugs" },
-    { "type": "should_not_trigger", "prompt": "design a nicer landing page for the docs site" },
+    { "type": "should_not_trigger", "prompt": "the footer link to the privacy page 404s, fix it" },
     { "type": "should_not_trigger", "prompt": "make a 30-second promo video for this project" },
     { "type": "should_not_trigger", "prompt": "upgrade to the latest version of the framework" },
     { "type": "should_not_trigger", "prompt": "add a dark mode toggle to the settings page" },

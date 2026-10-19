@@ -3,7 +3,7 @@ name: mimic
 description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", and when a page or interface must land with a human ("make this actually good", "this looks generated"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect. Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.9.6"
+  version: "0.9.7"
   author: mimic
 ---
 
@@ -118,11 +118,8 @@ finish the first before starting the second. Do not blend them into one pass.
 
 ## Read next
 
-Everything below is one level deep and routed from here; nothing else needs loading.
-
-- [reference/selecting-repos.md](reference/selecting-repos.md) — **always**. Comparability axes, search strategy, what makes a candidate wrong, and the seven channels beyond GitHub.
-- [reference/evidence.md](reference/evidence.md) — **always**. E1–E4 evidence levels, budget, record format, and where an instruction has to live to be obeyed (per-step context, not the persona).
-- [reference/licensing.md](reference/licensing.md) — **before writing anything derived from another project**.
+The three shared references above apply to every mode. Below is the rest, one level deep and
+routed from here; nothing else needs loading.
 - [reference/mimic-stack.md](reference/mimic-stack.md) — mode: stack.
 - [reference/mimic-implementation.md](reference/mimic-implementation.md) — mode: implementation.
 - [reference/mimic-readme.md](reference/mimic-readme.md) — mode: artifact.

@@ -151,7 +151,16 @@ for (const file of skillFiles) {
 let linkCount = 0;
 for (const file of files.filter((p) => p.endsWith(".md"))) {
   const raw = readFileSync(file, "utf8");
-  for (const match of raw.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
+  // Fenced examples frequently show markdown link syntax as content; a link that only
+  // exists inside a fence is documentation, not a route.
+  const prose = raw
+    .split(/\r?\n/)
+    .map((line, index, all) => {
+      const fence = all.slice(0, index).filter((l) => /^```/.test(l)).length;
+      return fence % 2 === 1 ? line.replace(/\[[^\]]*\]\([^)]+\)/g, "") : line;
+    })
+    .join("\n");
+  for (const match of prose.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
     const target = match[1].trim();
     if (/^(https?:|mailto:|#)/.test(target)) continue;
     linkCount++;

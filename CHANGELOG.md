@@ -4,6 +4,16 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.9.7 — 2026-10-19
+
+- `SKILL.md`: the three shared references were listed twice (once under **Modes**, once under
+  **Read next**). They now appear once; the second list covers only the mode files.
+- `evals/evals.json`: "design a nicer landing page for the docs site" was listed as a
+  should-not-trigger case while the description advertises exactly that design-register mode.
+  Replaced with a concrete bug report ("the footer link to the privacy page 404s").
+- `scripts/validate.mjs`: the link check skipped fenced code blocks, so a link shown as example
+  syntax is no longer reported as a broken route.
+
 ## 0.9.6 — 2026-10-19
 
 - `reference/evidence.md`: new **"Where an instruction lives"** — a pre-registered ablation
