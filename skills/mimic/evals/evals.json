@@ -15,8 +15,10 @@
     { "type": "should_trigger", "prompt": "can u check how other repos do their contributing guide" },
     { "type": "should_trigger", "prompt": "这个页面要用真实的字体、图标和贴图，别什么都自己拿代码画" },
     { "type": "should_trigger", "prompt": "find a CC0 3D model and PBR textures for this scene instead of building boxes" },
+    { "type": "should_trigger", "prompt": "找几个同类项目，把能直接用的实现拄过来，许可证要对" },
 
     { "type": "should_not_trigger", "prompt": "download this PDF and summarise it" },
+    { "type": "should_not_trigger", "prompt": "把我电脑里这个文件复制到备份目录" },
 
     { "type": "should_not_trigger", "prompt": "rename this variable to something clearer" },
     { "type": "should_not_trigger", "prompt": "there is a typo on line 42, fix it" },

@@ -78,7 +78,7 @@ Most "research before you build" prompts stop at a report. `mimic` closes these 
 | **Licence** | An explicit check before anything is adopted: structure and ideas transfer, expression and code do not. GPL/AGPL/unlicensed sources are flagged, not quietly used. |
 | **Closure** | The deliverable is a file on disk plus an "adopted / deliberately not adopted / reason" table — not advice in a chat window. In implementation mode the deliverable is the changed source plus its provenance block. |
 | **Constraint test** | A pattern is only adopted if you can name the constraint that forced it *and* show that you share it. Otherwise the machinery is cargo cult, and the finding is that you did not need it. |
-| **Clean room** | Describe the pattern in your own words first, then close the source and implement. This is what makes "never copy code" a procedure instead of a promise. |
+| **Copy or reimplement** | A permissive licence is permission: vendor the file with its header and provenance, or describe the pattern and rewrite it when the licence forbids copying. The choice is made explicitly, never blurred. |
 | **Tested router** | The `description` is the router, so the repo scores every eval prompt against every description in a sibling catalog. A prompt that should not route here fails the build, not a review. |
 
 And it has a degraded mode: **no network, no answer.** If GitHub is unreachable the agent
@@ -117,7 +117,7 @@ skills/mimic/
     evidence.md                 # E1–E4 levels, budget, record and report formats
     licensing.md                # what transfers, compatibility table, hard lines
     mimic-stack.md              # mode: stack -> decision record
-    mimic-implementation.md     # mode: implementation -> shape, constraint test, clean room
+    mimic-implementation.md     # mode: implementation -> shape, copy or reimplement
     mimic-readme.md             # mode: artifact -> file on disk
     mimic-conventions.md        # mode: conventions -> layout, CI, AGENTS.md
     mimic-design.md             # when the artifact is judged by its effect: register, memorable opt-in, specs

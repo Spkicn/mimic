@@ -4,6 +4,24 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.3 — 2026-10-19
+
+- Copying source code became a first-class path. The old hard line ("never copy code",
+  clean-room only) made the skill pay for a rewrite whenever a permissively licensed file
+  already did the job. `reference/licensing.md` now decides by licence, not by sentiment:
+  MIT/BSD/Apache-2.0/MPL/CC0 code may be vendored with its copyright header kept and a
+  `## Copies` provenance row (destination → source@sha:path → SPDX → header kept →
+  sha256[:12]); copyleft or unlicensed code is read for ideas and reimplemented. Prose stays
+  off limits either way.
+- `reference/mimic-implementation.md`: the clean-room two-step became "two ways to land a
+  shape" — a five-step copy path and the three-step reimplement path — plus a `Way:` and
+  `Copies:` line in the provenance block.
+- `reference/mimic-gate.md`: hard line rewritten, checklist item added. `SKILL.md` comparables
+  rule now allows licensed copying with provenance; the description says so, so the skill is
+  no longer advertised as research-only. The README comparison row matches.
+- Evals: one trigger for "find comparables and vendor what is usable" and one negative for
+  plain file copying, so the new vocabulary routes here and ordinary copy/paste does not.
+
 ## 0.10.2 — 2026-10-19
 
 - `SKILL.md`: a two-line pointer at the top saying where the depth is. When a deployment's system

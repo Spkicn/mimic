@@ -64,7 +64,8 @@ Do not report success until every line holds. Report the gate itself.
 - [ ] If judged by effect: the moment of use is named, the truth is live, exactly one
       non-obvious choice is defensible, and the register line is written.
 - [ ] The artifact exists on disk and you name its path.
-- [ ] Adopted / deliberately rejected / reason list; the least-trusted decision named.
+- [ ] Adopted / deliberately rejected / reason list; every copied file has its provenance
+      row and its copyright header intact; the least-trusted decision named.
 - [ ] The checker you have was run; what you did **not** check is written down.
 
 
@@ -72,8 +73,9 @@ Do not report success until every line holds. Report the gate itself.
 
 - **No network, no answer.** If you cannot reach the web, say so and stop. Do not reconstruct
   repositories, stars, licences or trees from memory. Say what you would have checked.
-- **Never copy code.** Read how a project structures something; write your own. Licence
-  compatibility is a permission question, not permission to copy.
+- **Copied code is recorded code.** Copy only from a licence that permits it, keep the
+  copyright header, and record destination → `owner/repo@<sha>:path` → SPDX → header kept → sha256[:12].
+  Copyleft or unlicensed sources are read for ideas only; prose is never copied either way.
 - **Never let one project be the answer.** A single admired repository is a taste, not a
   convention. Three is the floor.
 - **Never mimic decoration.** Emoji headers, badge walls and colour schemes are not

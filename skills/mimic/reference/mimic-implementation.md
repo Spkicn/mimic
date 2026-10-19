@@ -81,34 +81,53 @@ exceptions, a team shipping daily behind a feature-flag system. A solo project o
 project usually has none of the first four — which is exactly why the famous repository's
 architecture is usually the wrong thing to copy.
 
-## Clean-room two-step
+## Two ways to land a shape: copy or reimplement
 
-This is how "never copy code" becomes operational instead of aspirational.
+Vendoring is normal engineering when the licence permits it and the file does the job. Reimplementing
+is required when the licence forbids copying, or when the source drags in a dependency or an
+abstraction you do not want. Choose explicitly, say which you chose, and never blur the two.
 
-1. **Describe.** With the source open, write the pattern in **your own words**, as
-   pseudocode, and save a **permalink at the commit SHA** for each claim. The permalink is
-   the evidence — a branch URL rots, a SHA does not. The probe prints the commit SHA of the
-   default branch it fetched; use that SHA rather than the branch name.
-2. **Implement.** Close the source. Write the implementation from your own pseudocode, in
-   this project's names, types and error strategy. Do not re-open the file while typing.
-3. **Verify by test, not by diff.** A test proves the behaviour. If you catch yourself
-   comparing your file to theirs line by line, you are copying — stop and return to step 1.
+### Copy (permissive licence)
 
-Step 2 is not ceremony. It is the difference between learning a design and laundering
-someone else's expression, and it is what keeps the licence position in
+1. **Read the licence first.** SPDX id and the file's header — no copy before that, and no
+   "probably MIT".
+2. **Copy the file with its header.** Keep the copyright line and licence notice; strip nothing
+   for looks and change nothing on the way in.
+3. **Record provenance** in the commit body and in the `## Copies` table of
+   [licensing.md](licensing.md): destination path → `owner/repo@<sha>:path` → SPDX → header kept
+   → sha256[:12].
+4. **Adapt only what the brief needs**, and list the changes. An edited copy is a modified file;
+   its diff against the source is what a reviewer reads.
+5. **Test it here.** A file that compiled there may not compile in this project.
+
+### Reimplement (copyleft, unlicensed, or shape only)
+
+1. **Describe.** With the source open, write the pattern in **your own words**, as pseudocode, and
+   save a **permalink at the commit SHA** for each claim. The permalink is the evidence — a
+   branch URL rots, a SHA does not. The probe prints the commit SHA of the default branch it
+   fetched; use that SHA rather than the branch name.
+2. **Implement.** Close the source. Write it in this project's names, types and error strategy.
+   Do not re-open the file while typing.
+3. **Verify by test, not by diff.** A test proves the behaviour. If you catch yourself comparing
+   your file to theirs line by line, you wanted to copy: go back to the copy path and check the
+   licence, or return to step 1.
+
+Either way, prose stays off limits: README text, comments and docstrings are never pasted. Keep
 [licensing.md](licensing.md) true rather than nominal.
 
 ## Where it lands
 
-The deliverable is the **changed source files**, plus a provenance block. Code alone loses
-the reasoning the moment the session ends.
+The deliverable is the **changed or copied source files**, plus a provenance block. Code alone
+loses the reasoning the moment the session ends.
 
 ```
 Pattern:           <the shape that was adopted>
 Source:            <owner/repo>@<sha> — <path> (permalink)
 Licence:           <SPDX id, or "none — ideas only">
+Way:               <copied | reimplemented>
 Shared constraint: <the constraint both projects have>
 Diverged because:  <where we deliberately differ, or "not diverged">
+Copies:            <destination → owner/repo@<sha>:path → SPDX → header kept → sha256[:12]>
 ```
 
 Put it in the commit body or the pull-request description. Escalate to
@@ -123,12 +142,13 @@ projects worldwide that already built what is needed, reads their schema and ser
 and writes down exactly what to copy and what to leave".
 
 **Adopted from it:** topic-based search over phrase search; the small-repo-over-famous-repo
-instinct; permalinks pinned at the commit SHA; and the pseudocode → write → verify ordering.
+instinct; permalinks pinned at the commit SHA; the pseudocode → write → verify ordering; and now
+its core move — deciding *what to copy* is a legitimate output.
 
-**Rejected from it:** the copying. Its output is what to copy; this skill's output is what
-shape to write yourself. [licensing.md](licensing.md) keeps code and expression off limits
-and permits only ideas and structure, so step 2 above exists precisely where `code-to-copy`
-would have you paste.
+**Diverged from it:** the copying became conditional and recorded. Its output is a list of what
+to copy; ours is the copy plus the licence that permits it, the header kept, and the sha256 it
+started from — so a reviewer can tell a vendored file from an invented one, and copyleft or
+unlicensed sources are refused outright.
 
 ## Anti-patterns
 
