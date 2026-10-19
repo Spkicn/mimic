@@ -129,7 +129,12 @@ model is most tempted to invent and most likely to be wrong about.
 
 ## Degraded mode
 
-If GitHub is unreachable, stop and report it. Name the queries you would have run and the
-axes you would have used. Do not fall back on remembered projects — recalled repository
-facts are indistinguishable from confabulation and are the single most damaging output of
-this skill.
+If one channel is unreachable, say so and use another before you stop: official docs,
+specification text, the installed package source, a changelog, or the target repository's
+own precedent can all carry the same decision. Report which channel you used and which
+queries you would still have run.
+
+Never fall back on remembered projects. Recalled repository facts are indistinguishable from
+confabulation and are the single most damaging output of this skill. A failed fetch is a fact
+about the tool, not evidence that the source does not exist — retry once before declaring a
+channel unavailable.

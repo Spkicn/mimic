@@ -4,6 +4,18 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.9.5 — 2026-10-19
+
+- Skill: a new **"Where to look — channels, not just GitHub"** table in `SKILL.md` (seven
+  channels: source of similar repositories, official docs for the shipped version,
+  specification text, installed package source from the lockfile, changelog/releases/issues,
+  starters and templates, and precedent inside the target repo), with the rule that two
+  independent channels outrank ten repos of the same genre and that a pattern is copied,
+  never prose.
+- `reference/selecting-repos.md`: degraded mode rewritten — a dead channel means use another
+  channel, not stop and not remember; a failed fetch is a fact about the tool, retry once
+  before declaring the source gone.
+
 ## 0.9.4 — 2026-10-19
 
 - Skill: this is the working copy that twenty-four measured rounds produced, and the first

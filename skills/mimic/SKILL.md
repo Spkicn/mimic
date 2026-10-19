@@ -3,7 +3,7 @@ name: mimic
 description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub and see how they do it", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", and when a page or interface must land with a human ("make this actually good", "this looks generated"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect. Not for renames, typos or version-independent logic, and never for copying source code.
 license: MIT
 metadata:
-  version: "0.9.4"
+  version: "0.9.5"
   author: mimic
 ---
 
@@ -93,6 +93,25 @@ quality, with this document winning only on the striking register and on briefs 
 design judgement. So: the core is the floor. Do not let its brevity talk you out of the
 optional sections when the task is judged by effect.
 
+
+## Where to look — channels, not just GitHub
+
+GitHub is one channel. The best available evidence depends on what you are imitating, and a
+decision grounded in two independent channels is worth more than one grounded in ten repos of
+the same genre:
+
+| Channel | Best for | Watch for |
+|---|---|---|
+| Similar repositories (source, not README claims) | implementation shape, repo conventions, artifact structure | popularity bias; the same genre converging on the same average |
+| Official docs, for the exact version you ship | APIs, configuration, supported behaviour | prose that contradicts the packaged source |
+| Specification / RFC / protocol text | wire formats, required behaviour, error semantics | implementing the spec the library deviates from |
+| Installed package source (`node_modules`, `site-packages`, `vendor`, lockfile) | what actually runs at this version | minified or transpiled builds; ignored files |
+| Changelog, release notes, issue threads | migration paths, known breakage, why the API is odd | advice for another major version |
+| Starters, templates, scaffolds | a working skeleton with the right file layout | abandoned templates; another ecosystem's conventions |
+| Precedent inside the target repository | the house style already accepted here | copying a local mistake into a new place |
+
+Read before you cite; never paste a URL you did not fetch. When two channels disagree, name
+both and follow the one closest to the version in the lockfile. Copy patterns, not prose.
 
 ## Modes
 
