@@ -4,6 +4,17 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.8 — 2026-10-21
+
+- **The design manual now has a research step, and it leaves a file.** Measured on a 249-call
+  site build: the skill loaded at step 1 and `mimic-design.md` was read at step 2, yet not one
+  comparable site was opened (0 hits for awwwards/dribbble/behance) while sixteen browser calls
+  all pointed at the local dev server. The manual explained how to judge a page and never asked
+  where its design came from, so the model designed from its own habits. New section: look at
+  2-4 real sites of the genre at the judged width, name what you take (grid, type scale, palette,
+  one motion idea) and what you reject, and record it in `design-refs.md` beside the artifact —
+  a file the checker can see.
+
 ## 0.10.7 — 2026-10-20
 
 - **The frontmatter was invalid YAML, so the skill disappeared from every catalog.** The

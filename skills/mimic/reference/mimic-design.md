@@ -4,6 +4,19 @@ Loaded from `SKILL.md` when the brief asks for something a human will judge by i
 effect rather than by its presence. Read the evidence for each rule before
 generalising it to a new medium.
 
+## Research step (before the first line of the artifact)
+
+Look at 2-4 real sites of the same genre, rendered at the width the work will be judged at — not
+gallery thumbnails, not blog summaries. Extract only what you can name: the grid, the type scale,
+the palette discipline, and one motion or state idea. Then write `design-refs.md` beside the
+artifact:
+
+- https://example.com — took: 12-col grid, 1.25 type scale; rejected: its carousel
+
+One line per site, including what you rejected. A reference you cannot name in one line is a mood,
+not a reference. Three navigations are cheaper than an hour of guessing, and what you name is what
+makes the page land in its genre instead of in the model's default.
+
 ## Design register (when the artifact is judged by its effect)
 
 A page, a landing section, a diagram, a demo: correctness is the floor, and the floor is the
