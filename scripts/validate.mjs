@@ -86,6 +86,12 @@ for (const file of skillFiles) {
       fail(`${rel}: description is empty or a block scalar ("${value}"); use a single-line scalar`);
     } else if (/^\s+\S/.test(nextLine)) {
       fail(`${rel}: description wraps onto a second line; keep it on one line for cross-host portability`);
+    } else if (!/^["'|>]/.test(value) && /:\s/.test(value)) {
+      // An unquoted plain scalar ends at a colon followed by a space; the YAML parser then
+      // reports "nested mappings are not allowed in compact mappings" and the host drops the
+      // skill with a warning nobody sees. 0.10.6 shipped exactly that: `rule: acquire` in the
+      // description made `mimic` invisible in every catalog for hours.
+      fail(`${rel}: description is an unquoted scalar containing ": " — YAML reads it as a nested mapping and hosts silently drop the skill; rephrase or quote the value`);
     } else if (description.length < 60) {
       fail(`${rel}: description too short (${description.length} chars) to route reliably`);
     } else if (description.length > DESCRIPTION_MAX) {

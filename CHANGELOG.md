@@ -4,6 +4,18 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.7 — 2026-10-20
+
+- **The frontmatter was invalid YAML, so the skill disappeared from every catalog.** The
+  `description` value is an unquoted plain scalar and it contained `the materials rule: acquire
+  the font…` — a colon plus space ends the scalar and starts a mapping, so the YAML parser threw
+  `Nested mappings are not allowed in compact mappings` and the DSH skill scanner dropped
+  `mimic` with a warning that never reached the UI. Observable symptom: the skill was simply
+  absent from the catalog, so `skill mimic` was impossible while the model still read
+  `reference/` through the persona's absolute path. Fix: `rule - acquire` (no colon), and
+  `scripts/validate.mjs` now parses the frontmatter and fails on a `: ` inside the unquoted
+  description, so this class of edit cannot ship again.
+
 ## 0.10.6 — 2026-10-20
 
 - **The delivery report is still owed after the checker passes.** A live run under the new
