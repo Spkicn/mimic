@@ -4,6 +4,20 @@ All notable changes to this repository. The version lives in two files —
 `skills/mimic/SKILL.md` (`metadata.version`) and `.claude-plugin/marketplace.json`
 (`metadata.version`) — and `node scripts/validate.mjs` fails when they disagree.
 
+## 0.10.6 — 2026-10-20
+
+- **The delivery report is still owed after the checker passes.** A live run under the new
+  deployment loaded mimic at call 1, read two references, ran `dsq` twice — then delivered
+  without naming the moment of use or the single non-obvious choice. Cause: the rule lived in
+  a reference file read 60 calls earlier, while the only thing still in front of the model at
+  delivery was the checker's `PASS`. So the rule moved to where it is met: item 3 of
+  `Before you deliver` in the body, and the same contract in the checker's footer.
+- Design pass stated as a separate obligation: a passing checker is not a design pass; it sees
+  dead CSS, contrast and buffered gestures, never taste.
+- Deployment hygiene (outside the skill): twenty stale `mimic-v*` snapshot copies sat inside
+  `~/.dsh/skills/`, and an arm globbed `mimic-v0.4.0` in a live run. They are archived out of
+  the skills root so the only copy a model can find is the current one.
+
 ## 0.10.5 — 2026-10-20
 
 - No spoken licence warning. The owner asked for copying to be silent ("抄之前说一句义务也不想要"):

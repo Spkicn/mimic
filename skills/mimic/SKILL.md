@@ -3,7 +3,7 @@ name: mimic
 description: Use when an artifact, implementation or page should follow what excellent projects actually do rather than the model's own habits. Triggers on "find similar projects on GitHub", "模仿", "参考同类开源项目", "别人是怎么写的", "how should we implement this", "what's the idiomatic way to do X", "how is this normally structured", "benchmark against comparable repos", "make our README look professional", "how should we organise this repo", "找素材", "用真实的图标/字体/贴图/模型", and when the work is judged by how it looks — a page, interface, 3D scene or demo ("make this actually good", "this looks generated", "做一个好看的页面", "搭一个场景"). Five modes - stack, implementation shape, written artifacts (README/CONTRIBUTING/docs), repository conventions, and design register for artifacts judged by their effect - plus the materials rule: acquire the font, icons, images, models, audio or libraries a human would download, instead of hand-drawing every element. Not for renames or typos. May vendor licensed code, with provenance and obligations noted.
 license: MIT
 metadata:
-  version: "0.10.5"
+  version: "0.10.6"
   author: mimic
 ---
 
@@ -138,9 +138,11 @@ routed from here; nothing else needs loading.
 
 ## Before you deliver
 
-1. Every claim in the artifact traces to a file, a command output or a fetch you made in this session.
-2. The check ran where the reader will read it, not where it was convenient to run.
-3. Something was measured while the interaction was still happening, not only after it ended.
+1. Every claim traces to a file, a command output or a fetch from this session, and the check
+   ran where the reader will read it, not where it was convenient.
+2. Something was measured while the interaction was still happening, not only after it ended.
+3. If a human will judge how it looks: name the moment of use and the single non-obvious choice
+   — one line each. A passing checker is not a design pass; it sees dead CSS, never taste.
 4. The report names the weakest part, in one line, without being asked.
 
 The full gate, including the items that only apply to pages and interfaces, is in
